@@ -1,0 +1,49 @@
+/*
+ * Copyright (c) 2023, Direct Drive Tech.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+
+/ {
+	i2c@c250000 {
+		stmvl53l5cx: stmvl53l5cx {
+			compatible = "st,stmvl53l5cx";
+			reg = <0x29>;
+			/* intr_gpio_nb = <&tegra_main_gpio TEGRA234_MAIN_GPIO(N, 1) GPIO_ACTIVE_LOW>; //GPIO12
+			rst_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(H, 0) GPIO_ACTIVE_HIGH>; //GPIO13
+			power_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(G, 6) GPIO_ACTIVE_HIGH>; //GPIO07
+			lpn_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Q, 6) GPIO_ACTIVE_HIGH>; //GPIO11 */
+			intr_gpio_nb = <&tegra_main_gpio TEGRA234_MAIN_GPIO(AC, 6) GPIO_ACTIVE_LOW>; //GPIO9
+			rst_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Q, 6) GPIO_ACTIVE_HIGH>; //GPIO11
+			power_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Z, 4) GPIO_ACTIVE_HIGH>; //SPI0_MISO
+			lpn_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(N, 1) GPIO_ACTIVE_HIGH>; //GPIO12
+			status = "okay";
+		};
+
+		sht30: sht30 {
+			compatible = "sensirion,sht30";
+			reg = <0x44>;
+			status = "okay";
+		};
+	};
+
+	i2c@3160000{
+		ch201: ch201@45 {
+			compatible = "tdk,ch201";
+			reg = <0x45>; // <-- Must be prog I2C address
+			app-i2c-addr = <0x29>;
+
+			irq_gpios = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Y, 4) GPIO_ACTIVE_LOW>; //SPI1_CSI1
+			i2c_rst_gpios = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Y, 2) GPIO_ACTIVE_HIGH>; //SPI2_MOSI
+			prog_gpios = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Y, 3) GPIO_ACTIVE_HIGH>; //SPI1_CSI0
+			status = "okay";
+		};
+	};
+};

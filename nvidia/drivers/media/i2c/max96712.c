@@ -15,38 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #define DEBUG */
 
+#define DEBUG 1
 #include <linux/seq_file.h>
 #include <linux/debugfs.h>
 #include <media/camera_common.h>
 #include <linux/module.h>
-#include <linux/gpio.h>
-#include <linux/of.h>
-#include <linux/of_gpio.h>
-
 
 struct max96712 {
 	struct i2c_client *i2c_client;
 	struct regmap *regmap;
 	const char *channel;
 };
-struct max96712 *global_priv[4] ;
+struct max96712 *global_priv[4];
 
-struct mutex max96712_rw;
-
-int max96712_write_reg_Dser(int slaveAddr,int channel,
-			u16 addr, u8 val)
+int max96712_write_reg_Dser(int slaveAddr, int channel, u16 addr, u8 val)
 {
 	struct i2c_client *i2c_client = NULL;
 	int bak = 0;
-	int err = 0;
+	int err;
 	/* unsigned int ival = 0; */
-
-	if(channel > 3 || channel < 0 || global_priv[channel] == NULL)
+	// printk("max96712_write_reg_Dser channel0000 = %d\n", channel);
+	if (channel > 3 || channel < 0 || global_priv[channel] == NULL) {
+		printk("max96712_write_reg_Dser channel = %d\n", channel);
 		return -1;
-
-	mutex_lock(&max96712_rw);
+	}
 	i2c_client = global_priv[channel]->i2c_client;
 	bak = i2c_client->addr;
 
@@ -54,46 +47,58 @@ int max96712_write_reg_Dser(int slaveAddr,int channel,
 	err = regmap_write(global_priv[channel]->regmap, addr, val);
 
 	i2c_client->addr = bak;
-	if(err)
-	{
+	if (err) {
+		printk("max96712_write_reg_Dser  i2c_client->addr = 0x%x, addr = 0x%x, val = 0x%x\n",
+		       i2c_client->addr, addr, val);
 		dev_err(&i2c_client->dev, "%s: addr = 0x%x, val = 0x%x\n",
-				__func__, addr, val);
+			__func__, addr, val);
+		return -1;
 	}
-	mutex_unlock(&max96712_rw);
-	return err;
+	return 0;
 }
 
 EXPORT_SYMBOL(max96712_write_reg_Dser);
 
-
-int max96712_read_reg_Dser(int slaveAddr,int channel,
-		u16 addr, unsigned int *val)
+int max96712_read_reg_Dser(int slaveAddr, int channel, u16 addr,
+			   unsigned int *val)
 {
 	struct i2c_client *i2c_client = NULL;
 	int bak = 0;
-	int err = 0;
-	if(channel > 3 || channel < 0 || global_priv[channel] == NULL)
+	int err;
+	if (channel > 3 || channel < 0 || global_priv[channel] == NULL)
 		return -1;
-
-	mutex_lock(&max96712_rw);
 	i2c_client = global_priv[channel]->i2c_client;
 	bak = i2c_client->addr;
 	i2c_client->addr = slaveAddr / 2;
 	err = regmap_read(global_priv[channel]->regmap, addr, val);
 	i2c_client->addr = bak;
-	if(err)
-	{
+	if (err) {
 		dev_err(&i2c_client->dev, "%s: addr = 0x%x, val = 0x%x\n",
-				__func__, addr, *val);
+			__func__, addr, *val);
+		return -1;
 	}
-	mutex_unlock(&max96712_rw);
-	return err;
+	return 0;
 }
 
 EXPORT_SYMBOL(max96712_read_reg_Dser);
 
-static int max96712_read_reg(struct max96712 *priv,
-			u16 addr, unsigned int *val)
+#if 0
+static int max96712_write_reg(struct max96712 *priv, u8 slave_addr,
+				u16 addr, u8 val)
+{
+	struct i2c_client *i2c_client = priv->i2c_client;
+	int err;
+
+	i2c_client->addr = slave_addr;
+	err = regmap_write(priv->regmap, addr, val);
+	if (err)
+		dev_err(&i2c_client->dev, "%s:i2c write failed, 0x%x = %x\n",
+			__func__, addr, val);
+
+	return err;
+}
+#endif
+static int max96712_read_reg(struct max96712 *priv, u16 addr, unsigned int *val)
 {
 	struct i2c_client *i2c_client = priv->i2c_client;
 	int err;
@@ -106,7 +111,6 @@ static int max96712_read_reg(struct max96712 *priv,
 	return err;
 }
 
-
 static int max96712_stats_show(struct seq_file *s, void *data)
 {
 	return 0;
@@ -118,11 +122,10 @@ static int max96712_debugfs_open(struct inode *inode, struct file *file)
 }
 
 static ssize_t max96712_debugfs_write(struct file *s,
-				const char __user *user_buf,
-				size_t count, loff_t *ppos)
+				      const char __user *user_buf, size_t count,
+				      loff_t *ppos)
 {
-	struct max96712 *priv =
-		((struct seq_file *)s->private_data)->private;
+	struct max96712 *priv = ((struct seq_file *)s->private_data)->private;
 	struct i2c_client *i2c_client = priv->i2c_client;
 
 	char buf[255];
@@ -148,10 +151,8 @@ static ssize_t max96712_debugfs_write(struct file *s,
 		return count;
 	}
 
-
 	return count;
 }
-
 
 static const struct file_operations max96712_debugfs_fops = {
 	.open = max96712_debugfs_open,
@@ -161,30 +162,10 @@ static const struct file_operations max96712_debugfs_fops = {
 	.release = single_release,
 };
 
-static int  max96712_power_on(struct max96712 *priv)
+static int max96712_debugfs_init(const char *dir_name, struct dentry **d_entry,
+				 struct dentry **f_entry, struct max96712 *priv)
 {
-	struct i2c_client *i2c_client = priv->i2c_client;
-	struct device_node *np = i2c_client->dev.of_node;
-	unsigned int pwdn_gpio = 0;
-
-	if(np) {
-		pwdn_gpio = of_get_named_gpio(np, "pwdn-gpios", 0);
-		dev_info(&i2c_client->dev,"%s: pwdn_gpio = %d\n",__func__,pwdn_gpio);
-	}
-	if (pwdn_gpio > 0) {
-		gpio_direction_output(pwdn_gpio, 1);
-		gpio_set_value(pwdn_gpio, 1);
-		msleep(100);
-	}
-	return 0;
-}
-
-static int max96712_debugfs_init(const char *dir_name,
-				struct dentry **d_entry,
-				struct dentry **f_entry,
-				struct max96712 *priv)
-{
-	struct dentry  *dp, *fp;
+	struct dentry *dp, *fp;
 	char dev_name[20];
 	struct i2c_client *i2c_client = priv->i2c_client;
 	struct device_node *np = i2c_client->dev.of_node;
@@ -196,13 +177,10 @@ static int max96712_debugfs_init(const char *dir_name,
 		if (err)
 			dev_err(&i2c_client->dev, "channel not found\n");
 
-		err = snprintf(dev_name, sizeof(dev_name), "max96712_%s", priv->channel);
-		if (err < 0)
-			return -EINVAL;
+		snprintf(dev_name, sizeof(dev_name), "max96712_%s",
+			 priv->channel);
 	}
 	index = priv->channel[0] - 'a';
-	if (index < 0)
-		return -EINVAL;
 	global_priv[index] = priv;
 
 	dev_dbg(&i2c_client->dev, "%s: index %d\n", __func__, index);
@@ -214,8 +192,8 @@ static int max96712_debugfs_init(const char *dir_name,
 		return -ENOMEM;
 	}
 
-	fp = debugfs_create_file("max96712", S_IRUGO|S_IWUSR,
-		dp, priv, &max96712_debugfs_fops);
+	fp = debugfs_create_file("max96712", S_IRUGO | S_IWUSR, dp, priv,
+				 &max96712_debugfs_fops);
 	if (!fp) {
 		dev_err(&i2c_client->dev, "%s: debugfs create file failed\n",
 			__func__);
@@ -230,41 +208,41 @@ static int max96712_debugfs_init(const char *dir_name,
 	return 0;
 }
 
-static  struct regmap_config max96712_regmap_config = {
+static struct regmap_config max96712_regmap_config = {
 	.reg_bits = 16,
 	.val_bits = 8,
 	.cache_type = REGCACHE_RBTREE,
 };
 
 static int max96712_probe(struct i2c_client *client,
-				const struct i2c_device_id *id)
+			  const struct i2c_device_id *id)
 {
 	struct max96712 *priv;
 	int err = 0;
+	//	unsigned int val = 0;
 
 	dev_info(&client->dev, "%s: enter\n", __func__);
-	
+
 	priv = devm_kzalloc(&client->dev, sizeof(*priv), GFP_KERNEL);
 	priv->i2c_client = client;
-	priv->regmap = devm_regmap_init_i2c(priv->i2c_client,
-				&max96712_regmap_config);
+	priv->regmap =
+		devm_regmap_init_i2c(priv->i2c_client, &max96712_regmap_config);
 	if (IS_ERR(priv->regmap)) {
-		dev_err(&client->dev,
-			"regmap init failed: %ld\n", PTR_ERR(priv->regmap));
+		dev_err(&client->dev, "regmap init failed: %ld\n",
+			PTR_ERR(priv->regmap));
 		return -ENODEV;
-	}
-
-	mutex_init(&max96712_rw);
-
-	err = max96712_power_on(priv);
-	if (err) {
-		dev_err(&client->dev, "Failed to power on err =%d\n",err);
-		return err;
 	}
 
 	err = max96712_debugfs_init(NULL, NULL, NULL, priv);
 	if (err)
 		return err;
+
+	//	max96712_write_reg(priv, 0x41, 0x0010, 0xff);
+	//	msleep(300);
+	//	max96712_write_reg(priv, 0x62, 0x0010, 0xff);
+	//	msleep(300);
+	//	max96712_write_reg(priv, 0x60, 0x0010, 0xff);
+	//	msleep(300);
 
 	/*set daymode by fault*/
 	dev_info(&client->dev, "%s:  success\n", __func__);
@@ -272,11 +250,8 @@ static int max96712_probe(struct i2c_client *client,
 	return err;
 }
 
-
-static int
-max96712_remove(struct i2c_client *client)
+static int max96712_remove(struct i2c_client *client)
 {
-
 	if (client != NULL) {
 		i2c_unregister_device(client);
 		client = NULL;
@@ -287,14 +262,16 @@ max96712_remove(struct i2c_client *client)
 
 static const struct i2c_device_id max96712_id[] = {
 	{ "max96712", 0 },
-	{ },
+	{},
 };
 
 const struct of_device_id max96712_of_match[] = {
-	{ .compatible = "nvidia,max96712", },
-	{ },
+	{
+		.compatible = "nvidia,max96712",
+	},
+	{},
 };
-
+//MODULE_DEVICE_TABLE(of, imx185_of_match);
 MODULE_DEVICE_TABLE(i2c, max96712_id);
 
 static struct i2c_driver max96712_i2c_driver = {
