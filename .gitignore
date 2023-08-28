@@ -10,7 +10,6 @@
 #
 # Normal rules (sorted alphabetically)
 #
-.*
 *.a
 *.asn1.[ch]
 *.bin
@@ -95,6 +94,7 @@ modules.order
 !.gitattributes
 !.gitignore
 !.mailmap
+!.gitlab-ci.yml
 
 #
 # Generated include files
@@ -156,3 +156,13 @@ x509.genkey
 
 # Documentation toolchain
 sphinx_*/
+
+# CI ignore
+ci_base
+cross_compiler
+image*
+module*
+header*
+
+# VS Code
+.vscode*
