@@ -1,0 +1,32 @@
+# Copyright (c) Direct Drive Technology Co., Ltd. All rights reserved.
+# Author: Homalozoa haiwang.xu@directdrivetech.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+include:
+  - project: 'rbt/privileged/ci_base'
+    ref: main
+    file: 'pipelines/prepare_common.yml'
+
+default:
+  image: ddt/amd64/ubuntu:22.04
+
+stages:
+  - kernel_build
+
+kernel_build:
+  stage: kernel_build 
+  script:
+    - ci_base/scripts/prepare_linux.sh
+    - ci_base/scripts/linux_build.sh -k . -v apollo -c `pwd`/cross_compiler -d apollo_defconfig
