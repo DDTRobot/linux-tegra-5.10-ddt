@@ -110,6 +110,14 @@ static int tegra_machine_respeaker_init(struct snd_soc_pcm_runtime *rtd)
 	return tegra_audio_dai_init(rtd);
 }
 
+static int tegra_machine_tas5805m_init(struct snd_soc_pcm_runtime *rtd)
+{
+	struct device *dev = rtd->card->dev;
+	dev_err(dev,"tegra_machine_tas5805m_init");
+
+	return tegra_audio_dai_init(rtd);
+}
+
 static struct snd_soc_pcm_runtime *get_pcm_runtime(struct snd_soc_card *card,
 						   const char *link_name)
 {
@@ -175,6 +183,7 @@ int tegra_codecs_runtime_setup(struct snd_soc_card *card,
 			       unsigned int aud_mclk)
 {
 	struct snd_soc_pcm_runtime *rtd;
+	struct snd_soc_pcm_stream *dai_params;
 	int i, err;
 
 	rtd = get_pcm_runtime(card, "rt565x-playback");
@@ -238,6 +247,13 @@ int tegra_codecs_runtime_setup(struct snd_soc_card *card,
 				}
 			}
 		}
+
+	rtd = get_pcm_runtime(card, "tas5805m-codec");
+	if (rtd) {
+		dev_info(card->dev, "tas5805 pcm runtime\n");
+		dai_params =
+		(struct snd_soc_pcm_stream *)rtd->dai_link->params;
+		}
 	}
 
 	return 0;
@@ -262,6 +278,10 @@ int tegra_codecs_init(struct snd_soc_card *card)
 			dai_links[i].init = tegra_machine_fepi_init;
 		else if (strstr(dai_links[i].name, "respeaker-4-mic-array"))
 			dai_links[i].init = tegra_machine_respeaker_init;
+		else if (strstr(dai_links[i].name, "tas5805m-codec")){
+			dai_links[i].init = tegra_machine_tas5805m_init;
+			dev_info(card->dev,"tas5805m");
+		}
 	}
 
 	return 0;
