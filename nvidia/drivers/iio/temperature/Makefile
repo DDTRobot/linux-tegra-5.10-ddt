@@ -14,3 +14,4 @@ ifneq (,$(filter $(CONFIG_NVS_TMP1X2_RELAY),y m))
 CFLAGS_nvs_tmp1x2.o += -DNVS_CFG_KIF=NVS_KIF_RELAY
 endif
 
+obj-$(CONFIG_SHT30) += sht30/
