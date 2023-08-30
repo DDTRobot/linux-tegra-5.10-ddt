@@ -6,3 +6,4 @@
 
 ccflags-y += -Werror
 obj-$(CONFIG_NVS_IQS2X3)	+= nvs_iqs2x3.o
+obj-$(CONFIG_VL53L5CX) += vl53l5cx/
