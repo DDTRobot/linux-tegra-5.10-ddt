@@ -1,4 +1,5 @@
 append_menu "Temperature sensors"
+source "drivers/iio/temperature/sht30/Kconfig"
 config NVS_TMP1X2_IIO
 	tristate "TI temperature sensor using IIO transport"
 	depends on I2C && SYSFS && IIO
