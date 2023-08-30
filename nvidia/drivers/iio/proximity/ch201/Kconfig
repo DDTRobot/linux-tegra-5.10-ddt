@@ -1,0 +1,6 @@
+config CH201
+	tristate "tdk ch201 proximity"
+	depends on I2C
+	help
+	  The driver uses the NVS (NVidia Sensor) IIO and proximity
+	  framework.
