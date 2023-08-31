@@ -32,6 +32,16 @@
 			reg = <0x44>;
 			status = "okay";
 		};
+		
+		bmi088_a@69 {
+			compatible = "bmi,bmi088";
+			reg = <0x69>; // <-- Must be gyroscope I2C address
+			accel_i2c_addr = <0x19>; // Must be specified
+			accel_irq_gpio = <&tegra_aon_gpio ACCE1_IRQ_GPIO GPIO_ACTIVE_HIGH>;
+			gyro_irq_gpio = <&tegra_aon_gpio GYRO1_IRQ_GPIO GPIO_ACTIVE_HIGH>;
+			accel_matrix = [01 00 00 00 01 00 00 00 01];
+			gyro_matrix = [01 00 00 00 01 00 00 00 01];
+		};
 	};
 
 	i2c@3160000{
