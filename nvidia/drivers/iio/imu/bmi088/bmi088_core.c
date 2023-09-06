@@ -38,7 +38,6 @@
 #include <linux/atomic.h>
 
 #include "bmi08x.h"
-// #include "bmi088.h"
 
 #define BMI_NAME			"bmi088"
 #define BMI_PART_BMI088			(0)
@@ -79,13 +78,6 @@ static struct miscdevice bmi_imu_miscdev;
 struct bmi08x_sensor_data bmi08x_accel;
 struct bmi08x_sensor_data bmi08x_gyro;
 
-// LOG_MODULE_REGISTER(bmi08x, CONFIG_LOG_DEFAULT_LEVEL);
-
-// #define BMI08x_SPI_OPS (SPI_OP_MODE_MASTER | SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_MODE_CPOL | SPI_MODE_CPHA)
-
-// static struct spi_dt_spec bmi08x_accel_spec = SPI_DT_SPEC_GET(DT_NODELABEL(bmi088_accel), BMI08x_SPI_OPS, 0);
-// static struct spi_dt_spec bmi08x_gyro_spec = SPI_DT_SPEC_GET(DT_NODELABEL(bmi088_gyro), BMI08x_SPI_OPS, 0);
-
 static u8 bmi08x_accel_spec;
 static u8 bmi08x_gyro_spec;
 
@@ -97,46 +89,7 @@ struct bmi_state {
 struct bmi_state *st;
 static uint8_t * raw_data_buffer = NULL;
 
-static int accel_range[] = {3, 6, 12, 24};
-static int gyro_range[] = {2000, 1000, 500, 250, 125};
-
-static float accl_psc = 0; // G/Gravitational
-static float gyro_psc = 0; // Angle， -180, + 180
-static float stamp_psc = 0;
 static uint8_t misc_registered = 0;
-
-// static struct bmi08x_accel_int_channel_cfg accel_int_config;
-// static struct bmi08x_gyro_int_channel_cfg gyro_int_config;
-
-// static void bmi08x_error_codes_print_result(const char api_name[], int8_t rslt)
-// {
-//     if (rslt != BMI08X_OK)
-//     {
-//         if (rslt == BMI08X_E_NULL_PTR) {
-//             dev_err(&st->i2c->dev, "%s\tError [%d] : Null pointer", api_name, rslt);
-//         } else if (rslt == BMI08X_E_COM_FAIL) {
-//             dev_err(&st->i2c->dev, "%s\tError [%d] : Communication failure", api_name, rslt);
-//         } else if (rslt == BMI08X_E_DEV_NOT_FOUND) {
-//             dev_err(&st->i2c->dev, "%s\tError [%d] : Device not found", api_name, rslt);
-//         } else if (rslt == BMI08X_E_OUT_OF_RANGE) {
-//             dev_err(&st->i2c->dev, "%s\tError [%d] : Out of Range", api_name, rslt);
-//         } else if (rslt == BMI08X_E_INVALID_INPUT) {
-//             dev_err(&st->i2c->dev, "%s\tError [%d] : Invalid input", api_name, rslt);
-//         } else if (rslt == BMI08X_E_CONFIG_STREAM_ERROR) {
-//             dev_err(&st->i2c->dev, "%s\tError [%d] : Config stream error", api_name, rslt);
-//         } else if (rslt == BMI08X_E_RD_WR_LENGTH_INVALID) {
-//             dev_err(&st->i2c->dev, "%s\tError [%d] : Invalid Read write length", api_name, rslt);
-//         } else if (rslt == BMI08X_E_INVALID_CONFIG) {
-//             dev_err(&st->i2c->dev, "%s\tError [%d] : Invalid config", api_name, rslt);
-//         } else if (rslt == BMI08X_E_FEATURE_NOT_SUPPORTED) {
-//             dev_err(&st->i2c->dev, "%s\tError [%d] : Feature not supported", api_name, rslt);
-//         } else if (rslt == BMI08X_W_FIFO_EMPTY) {
-//             dev_err(&st->i2c->dev, "%s\tWarning [%d] : FIFO empty", api_name, rslt);
-//         } else {
-//             dev_err(&st->i2c->dev, "%s\tError [%d] : Unknown error code", api_name, rslt);
-//         }
-//     }
-// }
 
 BMI08X_INTF_RET_TYPE bmi08x_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
@@ -144,7 +97,6 @@ BMI08X_INTF_RET_TYPE bmi08x_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t l
     int ret = 0;
 
     uint8_t addr = *((uint8_t *)intf_ptr);
-    // dev_err(&st->i2c->dev, "bmi08x_read addr: %x", addr);
 
     msg.addr = addr;
     msg.flags = 0;
@@ -176,23 +128,17 @@ BMI08X_INTF_RET_TYPE bmi08x_write(uint8_t reg_addr, const uint8_t *reg_data, uin
 {
     struct i2c_msg msg;
 	int ret;
-    //uint8_t buf[66];
 
     uint8_t addr = *((uint8_t *)intf_ptr);
 
     raw_data_buffer[0] = reg_addr;
-    //buf[0] = reg_addr;
 
     memcpy(&raw_data_buffer[1], reg_data, len);
-    //memcpy(&buf[1], reg_data, len);
-
-    //printk("bmi088 len: %d\n", len);
 
     msg.addr = addr;
     msg.flags = 0;
     msg.len = len + 1;
     msg.buf = raw_data_buffer;
-    //msg.buf = buf;
 
     ret = i2c_transfer(st->i2c->adapter, &msg, 1);
     if (ret != 1)
@@ -221,42 +167,9 @@ static struct bmi08x_dev bmi08x_dev = {
     .delay_us = bmi08x_delay_us,
 };
 
-/*!
- * @brief This function converts lsb to meter per second squared for 16 bit accelerometer at
- * range 2G, 4G, 8G or 16G.
- */
-// static float lsb_to_mps2(int16_t val, int8_t g_range, uint8_t bit_width)
-// {
-//     float gravity;
-
-//     float half_scale = ((1 << bit_width) / 2.0f);
-
-//     gravity = (float)((GRAVITY_EARTH * val * g_range) / half_scale);
-
-//     return gravity;
-// }
-
-// /*!
-//  * @brief This function converts lsb to degree per second for 16 bit gyro at
-//  * range 125, 250, 500, 1000 or 2000dps.
-//  */
-// static float lsb_to_dps(int16_t val, int8_t dps, uint8_t bit_width)
-// {
-//     float half_scale;
-
-//     half_scale = ((float)(1 << bit_width) / 2.0f);
-
-//     return (dps / ((half_scale) + (float)BMI088_GYRO_RANGE_2000_DPS)) * (float)(val) * DPS_TO_RPS;
-// }
-
 int bmi088_get_data(void)
 {
     int8_t rslt;
-    // struct bmi08x_sensor_data bmi08x_accel;
-    // struct bmi08x_sensor_data bmi08x_gyro;
-    float accel_data[3];
-    float gyro_data[3];
-
     rslt = bmi08g_get_data(&bmi08x_gyro, &bmi08x_dev);
     if (rslt != BMI08X_OK) {
         dev_err(&st->i2c->dev, "Gyro error: %d", rslt);
@@ -266,25 +179,6 @@ int bmi088_get_data(void)
     if (rslt != BMI08X_OK) {
         dev_err(&st->i2c->dev, "Accel error: %d", rslt);
     }
-
-    dev_err(&st->i2c->dev, "Accel data: %d, %d, %d", bmi08x_accel.x, bmi08x_accel.y, bmi08x_accel.z);
-    //dev_err(&st->i2c->dev, "Gyro data: %d, %d, %d", bmi08x_gyro.x, bmi08x_gyro.y, bmi08x_gyro.z);
-
-    // accel_data[0] = lsb_to_mps2(bmi08x_accel.x, BMI088_ACCEL_RANGE_24, BMI088_BIT_WIDTH);
-    // accel_data[1] = lsb_to_mps2(bmi08x_accel.y, BMI088_ACCEL_RANGE_24, BMI088_BIT_WIDTH);
-    // accel_data[2] = lsb_to_mps2(bmi08x_accel.z, BMI088_ACCEL_RANGE_24, BMI088_BIT_WIDTH);
-    accel_data[0] = (GRAVITY_EARTH * bmi08x_accel.x * BMI088_ACCEL_RANGE_24) / ((1 << BMI088_BIT_WIDTH) / 2.0f);
-    accel_data[1] = (GRAVITY_EARTH * bmi08x_accel.y * BMI088_ACCEL_RANGE_24) / ((1 << BMI088_BIT_WIDTH) / 2.0f);
-    accel_data[2] = (GRAVITY_EARTH * bmi08x_accel.z * BMI088_ACCEL_RANGE_24) / ((1 << BMI088_BIT_WIDTH) / 2.0f);
-    //dev_err(&st->i2c->dev, "Accel data: %d, %d, %d", accel_data[0], accel_data[1], accel_data[2]);
-
-    // gyro_data[0] = lsb_to_dps(bmi08x_gyro.x, 250, BMI088_BIT_WIDTH);
-    // gyro_data[1] = lsb_to_dps(bmi08x_gyro.y, 250, BMI088_BIT_WIDTH);
-    // gyro_data[2] = lsb_to_dps(bmi08x_gyro.z, 250, BMI088_BIT_WIDTH);
-    gyro_data[0] = (250 / ((1 << BMI088_BIT_WIDTH) / 2.0f) + (float)BMI088_GYRO_RANGE_2000_DPS) * (float)(bmi08x_gyro.x) * DPS_TO_RPS;
-    gyro_data[1] = (250 / ((1 << BMI088_BIT_WIDTH) / 2.0f) + (float)BMI088_GYRO_RANGE_2000_DPS) * (float)(bmi08x_gyro.y) * DPS_TO_RPS;
-    gyro_data[2] = (250 / ((1 << BMI088_BIT_WIDTH) / 2.0f) + (float)BMI088_GYRO_RANGE_2000_DPS) * (float)(bmi08x_gyro.z) * DPS_TO_RPS;
-    //dev_err(&st->i2c->dev, "Gyro data: %d, %d, %d", gyro_data[0], gyro_data[1], gyro_data[2]);
 
     return 0;
 }
@@ -304,20 +198,12 @@ static int bmi088_release(struct inode *inode, struct file *file)
 static long bmi088_ioctl(struct file *file,
 		unsigned int cmd, unsigned long arg)
 {
-    // float accel_data[3];
-    // float gyro_data[3];
-    // int16_t acc_x;
-    // int16_t gyr_x;
-
 	struct bmi088_comms_struct comms_struct = {0};
 	int32_t ret = 0;
 	void __user *data_ptr = NULL;
 
     switch (cmd) {
 		case BMI_IMU_IOCTL_TRANSFER:
-
-            dev_err(&st->i2c->dev, "bmi088_ioctl : cmd = %u\n", cmd);
-
             ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
 			if (ret) {
                 dev_err(&st->i2c->dev, "Error at %s(%d)\n", __func__, __LINE__);
@@ -332,10 +218,6 @@ static long bmi088_ioctl(struct file *file,
 				dev_err(&st->i2c->dev, "Error at bmi088_get_data %s(%d)\n", __func__, __LINE__);
 			}
 
-			// copy to user buffer the read transfer
-            // acc_x = bmi08x_accel.x;
-            // dev_err(&st->i2c->dev, "bmi088: acc_x: %d.\n", acc_x);
-            // ret = copy_to_user(data_ptr, &acc_x, 2);
 			ret = copy_to_user(data_ptr, &bmi08x_accel, 2);
             ret = copy_to_user(data_ptr + 2, &bmi08x_accel.y, 2);
             ret = copy_to_user(data_ptr + 4, &bmi08x_accel.z, 2);
@@ -345,8 +227,6 @@ static long bmi088_ioctl(struct file *file,
 				return -EINVAL;
 			}
 
-            // gyr_x = bmi08x_gyro.x;
-            // ret = copy_to_user(data_ptr + 6, &gyr_x, 2);
 			ret = copy_to_user(data_ptr + 6, &bmi08x_gyro, 2);
             ret = copy_to_user(data_ptr + 8, &bmi08x_gyro.y, 2);
             ret = copy_to_user(data_ptr + 10, &bmi08x_gyro.z, 2);
@@ -416,7 +296,7 @@ int bmi088_init(void)
 
     if (rslt == BMI08X_OK) {
         bmi08x_dev.accel_cfg.bw = BMI08X_ACCEL_BW_NORMAL;
-        bmi08x_dev.accel_cfg.odr = BMI08X_ACCEL_ODR_100_HZ;
+        bmi08x_dev.accel_cfg.odr = BMI08X_ACCEL_ODR_200_HZ;
         bmi08x_dev.accel_cfg.power = BMI08X_ACCEL_PM_ACTIVE;
         bmi08x_dev.accel_cfg.range = BMI088_ACCEL_RANGE_24G;
 
@@ -427,8 +307,8 @@ int bmi088_init(void)
             dev_err(&st->i2c->dev, "Accel power on failed.");
         }
 
-        bmi08x_dev.gyro_cfg.bw = BMI08X_GYRO_BW_32_ODR_100_HZ;
-        bmi08x_dev.gyro_cfg.odr = BMI08X_GYRO_BW_32_ODR_100_HZ;
+        bmi08x_dev.gyro_cfg.bw = BMI08X_GYRO_BW_64_ODR_200_HZ;
+        bmi08x_dev.gyro_cfg.odr = BMI08X_GYRO_BW_64_ODR_200_HZ;
         bmi08x_dev.gyro_cfg.power = BMI08X_GYRO_PM_NORMAL;
         bmi08x_dev.gyro_cfg.range = BMI08X_GYRO_RANGE_250_DPS;
 
@@ -445,12 +325,6 @@ int bmi088_init(void)
     if (rslt == BMI08X_OK) {
         dev_err(&st->i2c->dev, "Accel ID: 0x%02X", bmi08x_dev.accel_chip_id);
         dev_err(&st->i2c->dev, "Gyro ID: 0x%02X", bmi08x_dev.gyro_chip_id);
-        accl_psc = accel_range[bmi08x_dev.accel_cfg.range] / 32768.0f;
-        gyro_psc = gyro_range[bmi08x_dev.gyro_cfg.range] / 32768.0f * M_PI / 180;
-        stamp_psc = 0;
-        // imu->accl_scale[0] = imu->accl_scale[1] = imu->accl_scale[2] = 1.0f;
-        // imu->accl_bias[0] = imu->accl_bias[1] = imu->accl_bias[2] = 0.0f;
-        // imu->gyro_bias[0] = imu->gyro_bias[1] = imu->gyro_bias[2] = 0.0f;
     } else {
         dev_err(&st->i2c->dev, "BMI08x initial failed");
     }
@@ -462,12 +336,9 @@ static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	int ret;
 	struct i2c_msg msg[2];
-    // uint8_t drdy_data;
 	u8 reg = 0x00;
 	u8 chip_id;
     u32 val32 = 0;
-    // int count = 10;
-    // uint8_t drdy_addr = 0x03;
 
 	st = devm_kzalloc(&client->dev, sizeof(*st), GFP_KERNEL);
 	if (st == NULL)
@@ -536,22 +407,6 @@ static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
 	dev_err(&client->dev, "done\n");
 
-//     while(count > 0)
-//     {
-//         count --;
-// // check_drdy:
-//         //bmi08x_read(drdy_addr, &drdy_data, 1, bmi08x_dev.intf_ptr_accel);
-//         // if(drdy_data & 0x80)
-//         // {
-//         //    bmi088_get_data(); 
-//         // } else {
-//         //     udelay(500);
-//         //     goto check_drdy;
-//         // }
-//         bmi088_get_data(); 
-//         mdelay(10);
-//     }
-
 	return ret;
 }
 
@@ -576,7 +431,6 @@ static struct i2c_driver bmi_driver = {
 		.name			= BMI_NAME,
 		.owner			= THIS_MODULE,
 		.of_match_table		= of_match_ptr(bmi_of_match),
-		//.pm			= &bmi_pm_ops,
 	},
 	.id_table			= bmi_i2c_device_ids,
 };
