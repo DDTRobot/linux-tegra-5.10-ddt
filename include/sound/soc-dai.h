@@ -248,7 +248,7 @@ struct snd_soc_dai_ops {
 	 * Called by soc-core to minimise any pops.
 	 */
 	int (*mute_stream)(struct snd_soc_dai *dai, int mute, int stream);
-
+	int (*digital_mute)(struct snd_soc_dai *dai, int mute);
 	/*
 	 * ALSA PCM audio operations - all optional.
 	 * Called by soc-core during audio PCM operations.
