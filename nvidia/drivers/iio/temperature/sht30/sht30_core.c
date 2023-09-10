@@ -32,6 +32,7 @@
 #define SHT30_DRV_NAME		    "sht30"
 
 #define SEN_HUMI_IOCTL_MEASURE 		_IOWR('b', 0x1, void *)
+#define SEN_HUMI_IOCTL_DEVID 		_IOWR('b', 0x2, void *)
 
 static struct miscdevice sen_humi_miscdev;
 static uint8_t * raw_data_buffer = NULL;
@@ -131,22 +132,22 @@ static long sht30_ioctl(struct file *file,
 		unsigned int cmd, unsigned long arg)
 {
 	int32_t temperature, humidity;
+	uint8_t status[2];
 	struct sht30_comms_struct comms_struct = {0};
 	void __user *data_ptr = NULL;
 	int32_t ret = 0;
 
+	ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
+	if (ret) {
+		pr_err("Error at %s(%d)\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data_ptr = (u8 __user *)(comms_struct.buf);
+	comms_struct.buf  = memdup_user(data_ptr,  comms_struct.len);
+
 	switch (cmd) {
 		case SEN_HUMI_IOCTL_MEASURE:
-
-			ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
-			if (ret) {
-				pr_err("Error at %s(%d)\n", __func__, __LINE__);
-				return -EINVAL;
-			}
-
-			data_ptr = (u8 __user *)(comms_struct.buf);
-			comms_struct.buf  = memdup_user(data_ptr,  comms_struct.len);
-
 			ret = sht3x_measure_blocking_read(&temperature, &humidity);
 			if (ret != 0) {
 				pr_err("sht30 temperature: %d degreeCelsius, humidity: %d percentRH\n", 
@@ -170,6 +171,20 @@ static long sht30_ioctl(struct file *file,
 				return -EINVAL;
 			}
 
+			break;
+		case SEN_HUMI_IOCTL_DEVID:
+			ret = sht30_read_multi(sht30_i2c_client, raw_data_buffer, SHT3X_CMD_READ_STATUS_REG, status, 2);
+			if(ret)
+			{
+				pr_err("sht30 get status failed\n");
+			} else {
+				pr_info("sht30 get status :%x %x", status[1], status[0]);
+			}
+			ret = copy_to_user(data_ptr, status, 2);
+            if (ret) {
+                pr_err("sht30: Error at %s(%d) when copy status to user.\n", __func__, __LINE__);
+                return -EINVAL;
+            }
 			break;
 		default:
 			return -EINVAL;

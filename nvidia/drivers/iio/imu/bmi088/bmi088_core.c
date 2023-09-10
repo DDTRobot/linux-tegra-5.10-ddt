@@ -67,6 +67,10 @@
 #define BMI088_COMMS_CHUNK_SIZE  		1024
 
 #define BMI_IMU_IOCTL_TRANSFER 		_IOWR('d',0x1, void*)
+#define BMI_IMU_IOCTL_ADEVID 		_IOWR('d',0x2, void*)
+#define BMI_IMU_IOCTL_GDEVID 		_IOWR('d',0x3, void*)
+#define BMI_IMU_IOCTL_ASELFTEST 	_IOWR('d',0x4, void*)
+#define BMI_IMU_IOCTL_GSELFTEST 	_IOWR('d',0x5, void*)
 
 struct bmi088_comms_struct {
 	__u16   len;
@@ -198,21 +202,22 @@ static int bmi088_release(struct inode *inode, struct file *file)
 static long bmi088_ioctl(struct file *file,
 		unsigned int cmd, unsigned long arg)
 {
+    uint8_t self_rslt;
 	struct bmi088_comms_struct comms_struct = {0};
 	int32_t ret = 0;
 	void __user *data_ptr = NULL;
 
+    ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
+    if (ret) {
+        dev_err(&st->i2c->dev, "Error at %s(%d)\n", __func__, __LINE__);
+        return -EINVAL; 
+    }
+
+    data_ptr = (u8 __user *)(comms_struct.buf);
+    comms_struct.buf  = memdup_user(data_ptr,  comms_struct.len);
+
     switch (cmd) {
 		case BMI_IMU_IOCTL_TRANSFER:
-            ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
-			if (ret) {
-                dev_err(&st->i2c->dev, "Error at %s(%d)\n", __func__, __LINE__);
-				return -EINVAL;
-			}
-
-			data_ptr = (u8 __user *)(comms_struct.buf);
-			comms_struct.buf  = memdup_user(data_ptr,  comms_struct.len);
-
 			ret = bmi088_get_data();
 			if (ret) {
 				dev_err(&st->i2c->dev, "Error at bmi088_get_data %s(%d)\n", __func__, __LINE__);
@@ -237,6 +242,79 @@ static long bmi088_ioctl(struct file *file,
 			}
 
 			break;
+        case BMI_IMU_IOCTL_ADEVID:
+            ret = copy_to_user(data_ptr, &bmi08x_dev.accel_chip_id, 1);
+            if (ret) {
+                dev_err(&st->i2c->dev, "bmi088: Error at %s(%d) when copy adev id to user.\n", __func__, __LINE__);
+                return -EINVAL;
+            }
+
+            break;
+        case BMI_IMU_IOCTL_GDEVID:
+            ret = copy_to_user(data_ptr + 1, &bmi08x_dev.gyro_chip_id, 1);
+            if (ret) {
+                dev_err(&st->i2c->dev, "bmi088: Error at %s(%d) when copy gdev id to user.\n", __func__, __LINE__);
+                return -EINVAL;
+            }
+
+            break;
+        case BMI_IMU_IOCTL_ASELFTEST:
+            self_rslt = bmi08a_perform_selftest(&bmi08x_dev);
+
+            if(!self_rslt) {
+                dev_err(&st->i2c->dev, "bmi088: aself_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
+                self_rslt = 0;
+            } else {
+                dev_err(&st->i2c->dev, "bmi088: error aself_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
+                self_rslt = 1;
+            }
+
+
+            // self_rslt = self_rslt & 0x16;
+
+            // if(self_rslt ==  0x12) {
+            //     dev_err(&st->i2c->dev, "bmi088: self_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
+            //     self_rslt = 0;
+            // } else {
+            //     dev_err(&st->i2c->dev, "bmi088: error self_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
+            //     self_rslt = 0;
+            // }
+
+            ret = copy_to_user(data_ptr + 2, &self_rslt, 1);
+            if (ret) {
+                dev_err(&st->i2c->dev, "bmi088: Error at %s(%d) when copy gdev id to user.\n", __func__, __LINE__);
+                return -EINVAL;
+            }
+            break;
+
+        case BMI_IMU_IOCTL_GSELFTEST:
+            self_rslt = bmi08g_perform_selftest(&bmi08x_dev);
+
+            if(!self_rslt) {
+                dev_err(&st->i2c->dev, "bmi088: gself_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
+                self_rslt = 0;
+            } else {
+                dev_err(&st->i2c->dev, "bmi088: error gself_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
+                self_rslt = 1;
+            }
+
+            // self_rslt = self_rslt & 0x16;
+
+            // if(self_rslt ==  0x12) {
+            //     dev_err(&st->i2c->dev, "bmi088: self_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
+            //     self_rslt = 0;
+            // } else {
+            //     dev_err(&st->i2c->dev, "bmi088: error self_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
+            //     self_rslt = 0;
+            // }
+
+            ret = copy_to_user(data_ptr + 3, &self_rslt, 1);
+            if (ret) {
+                dev_err(&st->i2c->dev, "bmi088: Error at %s(%d) when copy gdev id to user.\n", __func__, __LINE__);
+                return -EINVAL;
+            }
+            break;
+
 		default:
 			return -EINVAL;
 	}

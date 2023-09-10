@@ -26,6 +26,7 @@
 #define CHIRP_PART_CH201			(0)
 
 #define SEN_ULTRASONIC_IOCTL_MEASURE 		_IOWR('c',0x1, void*)
+#define SEN_ULTRASONIC_IOCTL_DEVID 			_IOWR('c',0x2, void*)
 
 static struct miscdevice sen_ulsonic_miscdev;
 
@@ -847,6 +848,7 @@ static long ch201_ioctl(struct file *file,
 {
 	uint32_t range;
 	uint16_t amplitude;
+	uint16_t dev_id;
 	unsigned long flags;
 	struct ch_group_t *grp_ptr;
 	struct ch201_comms_struct comms_struct = {0};
@@ -855,26 +857,17 @@ static long ch201_ioctl(struct file *file,
 	
 	grp_ptr = &chirp_group;
 
+	ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
+	if (ret) {
+		pr_err("Error at %s(%d)\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data_ptr = (u8 __user *)(comms_struct.buf);
+	comms_struct.buf  = memdup_user(data_ptr,  comms_struct.len);
+
 	switch (cmd) {
 		case SEN_ULTRASONIC_IOCTL_MEASURE:
-
-			pr_err("ch201 : enter %s(%d)\n", __func__, __LINE__);
-
-			ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
-			if (ret) {
-				pr_err("Error at %s(%d)\n", __func__, __LINE__);
-				return -EINVAL;
-			}
-
-			data_ptr = (u8 __user *)(comms_struct.buf);
-			comms_struct.buf  = memdup_user(data_ptr,  comms_struct.len);
-
-			ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
-			if (ret) {
-				pr_err("Error at %s(%d)\n", __func__, __LINE__);
-				return -EINVAL;
-			}
-
 			while(interrupt_flag != 1)
 			{
 				mdelay(10);
@@ -903,6 +896,16 @@ static long ch201_ioctl(struct file *file,
 			}
 
 			break;
+		case SEN_ULTRASONIC_IOCTL_DEVID:
+			dev_id = chirp_devices[0].part_number;
+
+			ret = copy_to_user(data_ptr, &dev_id, 2);
+			if (ret) {
+				pr_err("ch201: Error at %s(%d) when copy dev_id to user.\n", __func__, __LINE__);
+				return -EINVAL;
+			}
+			break;
+
 		default:
 			return -EINVAL;
 	}
