@@ -161,7 +161,7 @@ struct request {
 	 */
 	union {
 		struct hlist_node hash;	/* merge hash */
-		struct llist_node ipi_list;
+		struct list_head ipi_list;
 	};
 
 	/*

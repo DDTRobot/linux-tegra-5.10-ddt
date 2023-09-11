@@ -259,7 +259,7 @@ struct smc_local {
 	struct net_device *dev;
 	int	work_pending;
 
-	raw_spinlock_t lock;
+	spinlock_t lock;
 
 #ifdef CONFIG_ARCH_PXA
 	/* DMA needs the physical address of the chip */

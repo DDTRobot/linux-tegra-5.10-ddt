@@ -181,15 +181,13 @@ static int ttm_copy_io_ttm_page(struct ttm_tt *ttm, void *src,
 		return -ENOMEM;
 
 	src = (void *)((unsigned long)src + (page << PAGE_SHIFT));
-	/*
-	 * Ensure that a highmem page is mapped with the correct
-	 * pgprot. For non highmem the mapping is already there.
-	 */
-	dst = kmap_local_page_prot(d, prot);
+	dst = kmap_atomic_prot(d, prot);
+	if (!dst)
+		return -ENOMEM;
 
 	memcpy_fromio(dst, src, PAGE_SIZE);
 
-	kunmap_local(dst);
+	kunmap_atomic(dst);
 
 	return 0;
 }
@@ -205,15 +203,13 @@ static int ttm_copy_ttm_io_page(struct ttm_tt *ttm, void *dst,
 		return -ENOMEM;
 
 	dst = (void *)((unsigned long)dst + (page << PAGE_SHIFT));
-	/*
-	 * Ensure that a highmem page is mapped with the correct
-	 * pgprot. For non highmem the mapping is already there.
-	 */
-	src = kmap_local_page_prot(s, prot);
+	src = kmap_atomic_prot(s, prot);
+	if (!src)
+		return -ENOMEM;
 
 	memcpy_toio(dst, src, PAGE_SIZE);
 
-	kunmap_local(src);
+	kunmap_atomic(src);
 
 	return 0;
 }

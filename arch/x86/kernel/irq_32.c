@@ -131,7 +131,6 @@ int irq_init_percpu_irqstack(unsigned int cpu)
 	return 0;
 }
 
-#ifndef CONFIG_PREEMPT_RT
 void do_softirq_own_stack(void)
 {
 	struct irq_stack *irqstk;
@@ -148,7 +147,6 @@ void do_softirq_own_stack(void)
 
 	call_on_stack(__do_softirq, isp);
 }
-#endif
 
 void __handle_irq(struct irq_desc *desc, struct pt_regs *regs)
 {

@@ -2,7 +2,6 @@
 
 #include <linux/context_tracking.h>
 #include <linux/entry-common.h>
-#include <linux/highmem.h>
 #include <linux/livepatch.h>
 #include <linux/audit.h>
 
@@ -149,16 +148,8 @@ static unsigned long exit_to_user_mode_loop(struct pt_regs *regs,
 
 		local_irq_enable_exit_to_user(ti_work);
 
-		if (ti_work & _TIF_NEED_RESCHED_MASK)
+		if (ti_work & _TIF_NEED_RESCHED)
 			schedule();
-
-#ifdef ARCH_RT_DELAYS_SIGNAL_SEND
-		if (unlikely(current->forced_info.si_signo)) {
-			struct task_struct *t = current;
-			force_sig_info(&t->forced_info);
-			t->forced_info.si_signo = 0;
-		}
-#endif
 
 		if (ti_work & _TIF_UPROBE)
 			uprobe_notify_resume(regs);
@@ -203,7 +194,6 @@ static void exit_to_user_mode_prepare(struct pt_regs *regs)
 
 	/* Ensure that the address limit is intact and no locks are held */
 	addr_limit_user_check();
-	kmap_assert_nomap();
 	lockdep_assert_irqs_disabled();
 	lockdep_sys_exit();
 }
@@ -363,7 +353,7 @@ void irqentry_exit_cond_resched(void)
 		rcu_irq_exit_check_preempt();
 		if (IS_ENABLED(CONFIG_DEBUG_ENTRY))
 			WARN_ON_ONCE(!on_thread_stack());
-		if (should_resched(0))
+		if (need_resched())
 			preempt_schedule_irq();
 	}
 }

@@ -342,9 +342,10 @@ void intel_breadcrumbs_park(struct intel_breadcrumbs *b)
 	/* Kick the work once more to drain the signalers */
 	irq_work_sync(&b->irq_work);
 	while (unlikely(READ_ONCE(b->irq_armed))) {
-		irq_work_queue(&b->irq_work);
+		local_irq_disable();
+		signal_irq_work(&b->irq_work);
+		local_irq_enable();
 		cond_resched();
-		irq_work_sync(&b->irq_work);
 	}
 	GEM_BUG_ON(!list_empty(&b->signalers));
 }

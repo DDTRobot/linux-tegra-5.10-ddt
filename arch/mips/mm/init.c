@@ -36,6 +36,7 @@
 #include <asm/cachectl.h>
 #include <asm/cpu.h>
 #include <asm/dma.h>
+#include <asm/kmap_types.h>
 #include <asm/maar.h>
 #include <asm/mmu_context.h>
 #include <asm/sections.h>
@@ -401,6 +402,9 @@ void __init paging_init(void)
 
 	pagetable_init();
 
+#ifdef CONFIG_HIGHMEM
+	kmap_init();
+#endif
 #ifdef CONFIG_ZONE_DMA
 	max_zone_pfns[ZONE_DMA] = MAX_DMA_PFN;
 #endif

@@ -18,7 +18,6 @@
 #include <linux/highmem.h>
 #include <linux/slab.h>
 #include <linux/spinlock.h>
-#include <linux/local_lock.h>
 #include <linux/types.h>
 #include <linux/atomic.h>
 #include <linux/frontswap.h>
@@ -388,37 +387,27 @@ static struct zswap_entry *zswap_entry_find_get(struct rb_root *root,
 /*********************************
 * per-cpu code
 **********************************/
-struct zswap_comp {
-	/* Used for per-CPU dstmem and tfm */
-	local_lock_t lock;
-	u8 *dstmem;
-};
-
-static DEFINE_PER_CPU(struct zswap_comp, zswap_comp) = {
-	.lock = INIT_LOCAL_LOCK(lock),
-};
+static DEFINE_PER_CPU(u8 *, zswap_dstmem);
 
 static int zswap_dstmem_prepare(unsigned int cpu)
 {
-	struct zswap_comp *zcomp;
 	u8 *dst;
 
 	dst = kmalloc_node(PAGE_SIZE * 2, GFP_KERNEL, cpu_to_node(cpu));
 	if (!dst)
 		return -ENOMEM;
 
-	zcomp = per_cpu_ptr(&zswap_comp, cpu);
-	zcomp->dstmem = dst;
+	per_cpu(zswap_dstmem, cpu) = dst;
 	return 0;
 }
 
 static int zswap_dstmem_dead(unsigned int cpu)
 {
-	struct zswap_comp *zcomp;
+	u8 *dst;
 
-	zcomp = per_cpu_ptr(&zswap_comp, cpu);
-	kfree(zcomp->dstmem);
-	zcomp->dstmem = NULL;
+	dst = per_cpu(zswap_dstmem, cpu);
+	kfree(dst);
+	per_cpu(zswap_dstmem, cpu) = NULL;
 
 	return 0;
 }
@@ -930,11 +919,10 @@ static int zswap_writeback_entry(struct zpool *pool, unsigned long handle)
 		dlen = PAGE_SIZE;
 		src = (u8 *)zhdr + sizeof(struct zswap_header);
 		dst = kmap_atomic(page);
-		local_lock(&zswap_comp.lock);
-		tfm = *this_cpu_ptr(entry->pool->tfm);
+		tfm = *get_cpu_ptr(entry->pool->tfm);
 		ret = crypto_comp_decompress(tfm, src, entry->length,
 					     dst, &dlen);
-		local_unlock(&zswap_comp.lock);
+		put_cpu_ptr(entry->pool->tfm);
 		kunmap_atomic(dst);
 		BUG_ON(ret);
 		BUG_ON(dlen != PAGE_SIZE);
@@ -1086,12 +1074,12 @@ static int zswap_frontswap_store(unsigned type, pgoff_t offset,
 	}
 
 	/* compress */
-	local_lock(&zswap_comp.lock);
-	dst = *this_cpu_ptr(&zswap_comp.dstmem);
-	tfm = *this_cpu_ptr(entry->pool->tfm);
+	dst = get_cpu_var(zswap_dstmem);
+	tfm = *get_cpu_ptr(entry->pool->tfm);
 	src = kmap_atomic(page);
 	ret = crypto_comp_compress(tfm, src, PAGE_SIZE, dst, &dlen);
 	kunmap_atomic(src);
+	put_cpu_ptr(entry->pool->tfm);
 	if (ret) {
 		ret = -EINVAL;
 		goto put_dstmem;
@@ -1115,7 +1103,7 @@ static int zswap_frontswap_store(unsigned type, pgoff_t offset,
 	memcpy(buf, &zhdr, hlen);
 	memcpy(buf + hlen, dst, dlen);
 	zpool_unmap_handle(entry->pool->zpool, handle);
-	local_unlock(&zswap_comp.lock);
+	put_cpu_var(zswap_dstmem);
 
 	/* populate entry */
 	entry->offset = offset;
@@ -1143,7 +1131,7 @@ insert_entry:
 	return 0;
 
 put_dstmem:
-	local_unlock(&zswap_comp.lock);
+	put_cpu_var(zswap_dstmem);
 	zswap_pool_put(entry->pool);
 freepage:
 	zswap_entry_cache_free(entry);
@@ -1188,10 +1176,9 @@ static int zswap_frontswap_load(unsigned type, pgoff_t offset,
 	if (zpool_evictable(entry->pool->zpool))
 		src += sizeof(struct zswap_header);
 	dst = kmap_atomic(page);
-	local_lock(&zswap_comp.lock);
-	tfm = *this_cpu_ptr(entry->pool->tfm);
+	tfm = *get_cpu_ptr(entry->pool->tfm);
 	ret = crypto_comp_decompress(tfm, src, entry->length, dst, &dlen);
-	local_unlock(&zswap_comp.lock);
+	put_cpu_ptr(entry->pool->tfm);
 	kunmap_atomic(dst);
 	zpool_unmap_handle(entry->pool->zpool, entry->handle);
 	BUG_ON(ret);

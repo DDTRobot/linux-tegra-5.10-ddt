@@ -971,6 +971,8 @@ void __init srmmu_paging_init(void)
 
 	sparc_context_init(num_contexts);
 
+	kmap_init();
+
 	{
 		unsigned long max_zone_pfn[MAX_NR_ZONES] = { 0 };
 
