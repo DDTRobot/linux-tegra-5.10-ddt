@@ -35,9 +35,6 @@ static struct miscdevice sen_ulsonic_miscdev;
 #define IQ_READY_FLAG		(1 << 1)		// non-blocking I/Q read has completed
 #define TIMER_FLAG			(1 << 2)		// period timer has interrupted
 
-struct timer_list etx_timer;
-spinlock_t lock;
-
 static unsigned int tdk_ultra_irq_num;
 
 
@@ -785,7 +782,6 @@ static uint8_t display_config_info(ch_dev_t * dev_ptr)
 static uint8_t handle_data_ready(ch_group_t *grp_ptr) {
 	uint8_t 	dev_num;
 	struct ch_dev_t 	*dev_ptr;
-	unsigned long flags;
 	int 		num_samples = 0;
     uint8_t 	ret_val = 0;
 
@@ -793,7 +789,6 @@ static uint8_t handle_data_ready(ch_group_t *grp_ptr) {
 		dev_ptr = ch_get_dev_ptr(grp_ptr, dev_num);
 
 		if (ch_sensor_is_connected(dev_ptr)) {
-			spin_lock_irqsave(&lock, flags);
 			if (ch_get_mode(dev_ptr) == CH_MODE_TRIGGERED_RX_ONLY) {
 				chirp_data[dev_num].range = ch_get_range(dev_ptr, CH_RANGE_DIRECT);
 			} else {
@@ -812,23 +807,10 @@ static uint8_t handle_data_ready(ch_group_t *grp_ptr) {
 
 			num_samples = ch_get_num_samples(dev_ptr);
 			chirp_data[dev_num].num_samples = num_samples;
-			spin_unlock_irqrestore(&lock, flags);
 		}
 	}
 	interrupt_flag = 1;
 	return ret_val;
-}
-
-void periodic_timer_callback(struct timer_list *t)
-{
-	struct ch_group_t *grp_ptr;
-	grp_ptr = &chirp_group;
-
-  	ch_group_trigger(&chirp_group);
-	chbsp_delay_ms(1);
-	handle_data_ready(grp_ptr);	
-
-	mod_timer(&etx_timer, jiffies + msecs_to_jiffies(MEASUREMENT_INTERVAL_MS));
 }
 
 static int ch201_open(struct inode *inode, struct file *file)
@@ -849,7 +831,6 @@ static long ch201_ioctl(struct file *file,
 	uint32_t range;
 	uint16_t amplitude;
 	uint16_t dev_id;
-	unsigned long flags;
 	struct ch_group_t *grp_ptr;
 	struct ch201_comms_struct comms_struct = {0};
 	void __user *data_ptr = NULL;
@@ -868,14 +849,15 @@ static long ch201_ioctl(struct file *file,
 
 	switch (cmd) {
 		case SEN_ULTRASONIC_IOCTL_MEASURE:
+			ch_group_trigger(&chirp_group);
+			chbsp_delay_ms(1);
+			handle_data_ready(grp_ptr);
 			while(interrupt_flag != 1)
 			{
 				mdelay(10);
 			}
-			spin_lock_irqsave(&lock, flags);
 			range = chirp_data[0].range / 32;
 			amplitude = chirp_data[0].amplitude;
-			spin_unlock_irqrestore(&lock, flags);
 			interrupt_flag = 0;
 
 			// printk("ch201 Range: %d mm  Amplitude: %u  \r\n", range, amplitude);
@@ -1061,10 +1043,6 @@ RESET_AND_LOAD:
 			chirp_data[dev_num].num_samples = ch_get_num_samples(dev_ptr);
 		}
 	}
-
-	spin_lock_init(&lock);
-	timer_setup(&etx_timer, periodic_timer_callback, 0);
-	mod_timer(&etx_timer, jiffies + msecs_to_jiffies(MEASUREMENT_INTERVAL_MS));
 
 	sen_ulsonic_miscdev.minor = MISC_DYNAMIC_MINOR;
 	sen_ulsonic_miscdev.name = "ch201";
