@@ -2152,7 +2152,9 @@ static int __init iwl_init(void)
 		return ret;
 	}
 
+	pr_info("Before iwl_opmode_register\n");
 	ret = iwl_opmode_register("iwldvm", &iwl_dvm_ops);
+	pr_info("After iwl_opmode_register\n");
 	if (ret) {
 		pr_err("Unable to register op_mode: %d\n", ret);
 		iwlagn_rate_control_unregister();
