@@ -240,6 +240,8 @@ int iwl_pnvm_load(struct iwl_trans *trans,
 	if (!trans->sku_id[0] && !trans->sku_id[1] && !trans->sku_id[2])
 		return 0;
 
+	/* There is no need to load pnvm file.*/
+	trans->pnvm_loaded = true;
 	/* load from disk only if we haven't done it (or tried) before */
 	if (!trans->pnvm_loaded) {
 		const struct firmware *pnvm;

@@ -1585,8 +1585,6 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
 	/* We have our copies now, allow OS release its copies */
 	release_firmware(ucode_raw);
 
-	iwl_dbg_tlv_load_bin(drv->trans->dev, drv->trans);
-
 	mutex_lock(&iwlwifi_opmode_table_mtx);
 	switch (fw->type) {
 	case IWL_FW_DVM:
