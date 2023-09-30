@@ -71,6 +71,7 @@
 #define BMI_IMU_IOCTL_GDEVID 		_IOWR('d',0x3, void*)
 #define BMI_IMU_IOCTL_ASELFTEST 	_IOWR('d',0x4, void*)
 #define BMI_IMU_IOCTL_GSELFTEST 	_IOWR('d',0x5, void*)
+#define BMI_IMU_IOCTL_INIT 		    _IOWR('d',0x6, void*)
 
 struct bmi088_comms_struct {
 	__u16   len;
@@ -199,12 +200,94 @@ static int bmi088_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
+int bmi088_init(void)
+{
+    int8_t rslt;
+
+    rslt = bmi08a_init(&bmi08x_dev);
+    if (rslt != BMI08X_OK) {
+        dev_err(&st->i2c->dev, "bmi08a_init failed. %d",rslt);
+    }
+
+    if (rslt == BMI08X_OK) {
+        rslt = bmi08g_init(&bmi08x_dev);
+    } else {
+        dev_err(&st->i2c->dev, "bmi08g_init failed. %d",rslt);
+    }
+
+    if (rslt == BMI08X_OK) {
+        rslt = bmi08a_soft_reset(&bmi08x_dev);
+        if (rslt != BMI08X_OK) {
+            dev_err(&st->i2c->dev, "bmi08a_soft_reset failed.");
+        }
+
+        rslt = bmi08g_soft_reset(&bmi08x_dev);
+        if (rslt != BMI08X_OK) {
+            dev_err(&st->i2c->dev, "bmi08g_soft_reset failed.");
+        }
+    }
+
+    if (rslt == BMI08X_OK) {
+        rslt = bmi08a_load_config_file(&bmi08x_dev);
+        if (rslt != BMI08X_OK) {
+            dev_err(&st->i2c->dev, "Uploading config file failed.");
+        }
+    }
+
+    rslt = BMI08X_OK;
+
+    if (rslt == BMI08X_OK) {
+        bmi08x_dev.accel_cfg.bw = BMI08X_ACCEL_BW_NORMAL;
+        bmi08x_dev.accel_cfg.odr = BMI08X_ACCEL_ODR_200_HZ;
+        bmi08x_dev.accel_cfg.power = BMI08X_ACCEL_PM_ACTIVE;
+        bmi08x_dev.accel_cfg.range = BMI088_ACCEL_RANGE_24G;
+
+        rslt = bmi08a_set_power_mode(&bmi08x_dev);
+        if (rslt == BMI08X_OK) {
+            rslt = bmi08a_set_meas_conf(&bmi08x_dev);
+        } else {
+            dev_err(&st->i2c->dev, "Accel power on failed.");
+        }
+
+        bmi08x_dev.gyro_cfg.bw = BMI08X_GYRO_BW_64_ODR_200_HZ;
+        bmi08x_dev.gyro_cfg.odr = BMI08X_GYRO_BW_64_ODR_200_HZ;
+        bmi08x_dev.gyro_cfg.power = BMI08X_GYRO_PM_NORMAL;
+        bmi08x_dev.gyro_cfg.range = BMI08X_GYRO_RANGE_250_DPS;
+
+        rslt = bmi08g_set_power_mode(&bmi08x_dev);
+        if (rslt == BMI08X_OK) {
+            dev_err(&st->i2c->dev, "bmi088 set_power_mode ok.");
+            rslt = bmi08g_set_meas_conf(&bmi08x_dev);
+        } else {
+            dev_err(&st->i2c->dev, "bmi088 Gyro power on failed.");
+        }
+
+    }
+
+    if (rslt == BMI08X_OK) {
+        dev_err(&st->i2c->dev, "Accel ID: 0x%02X", bmi08x_dev.accel_chip_id);
+        dev_err(&st->i2c->dev, "Gyro ID: 0x%02X", bmi08x_dev.gyro_chip_id);
+    } else {
+        dev_err(&st->i2c->dev, "BMI08x initial failed");
+    }
+
+    return rslt;
+}
+
+static void bmi_remove(void *data)
+{
+	struct i2c_client *client = data;
+
+	dev_info(&client->dev, "removed\n");
+}
+
 static long bmi088_ioctl(struct file *file,
 		unsigned int cmd, unsigned long arg)
 {
     uint8_t self_rslt;
+    int init_status;
 	struct bmi088_comms_struct comms_struct = {0};
-	int32_t ret = 0;
+	int ret = 0;
 	void __user *data_ptr = NULL;
 
     ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
@@ -217,6 +300,19 @@ static long bmi088_ioctl(struct file *file,
     comms_struct.buf  = memdup_user(data_ptr,  comms_struct.len);
 
     switch (cmd) {
+        case BMI_IMU_IOCTL_INIT:
+            ret = bmi088_init();
+            if (ret) {
+                bmi_remove(st->i2c);
+            }
+            init_status = ret;
+            ret = copy_to_user(data_ptr, &init_status, sizeof(int));
+            if (ret) {
+                dev_err(&st->i2c->dev, "bmi088: Error at %s(%d) when copy init_status to user.\n", __func__, __LINE__);
+				return -EINVAL;
+			}
+
+            break;
 		case BMI_IMU_IOCTL_TRANSFER:
 			ret = bmi088_get_data();
 			if (ret) {
@@ -329,87 +425,6 @@ static const struct file_operations bmi088_ranging_fops = {
 	.release 		= bmi088_release,
 };
 
-static void bmi_remove(void *data)
-{
-	struct i2c_client *client = data;
-
-	dev_info(&client->dev, "removed\n");
-}
-
-int bmi088_init(void)
-{
-    int8_t rslt;
-
-    rslt = bmi08a_init(&bmi08x_dev);
-    if (rslt != BMI08X_OK) {
-        dev_err(&st->i2c->dev, "bmi08a_init failed. %d",rslt);
-    }
-
-    if (rslt == BMI08X_OK) {
-        rslt = bmi08g_init(&bmi08x_dev);
-    } else {
-        dev_err(&st->i2c->dev, "bmi08g_init failed. %d",rslt);
-    }
-
-    if (rslt == BMI08X_OK) {
-        rslt = bmi08a_soft_reset(&bmi08x_dev);
-        if (rslt != BMI08X_OK) {
-            dev_err(&st->i2c->dev, "bmi08a_soft_reset failed.");
-        }
-
-        rslt = bmi08g_soft_reset(&bmi08x_dev);
-        if (rslt != BMI08X_OK) {
-            dev_err(&st->i2c->dev, "bmi08g_soft_reset failed.");
-        }
-    }
-
-    if (rslt == BMI08X_OK) {
-        rslt = bmi08a_load_config_file(&bmi08x_dev);
-        if (rslt != BMI08X_OK) {
-            dev_err(&st->i2c->dev, "Uploading config file failed.");
-        }
-    }
-
-    rslt = BMI08X_OK;
-
-    if (rslt == BMI08X_OK) {
-        bmi08x_dev.accel_cfg.bw = BMI08X_ACCEL_BW_NORMAL;
-        bmi08x_dev.accel_cfg.odr = BMI08X_ACCEL_ODR_200_HZ;
-        bmi08x_dev.accel_cfg.power = BMI08X_ACCEL_PM_ACTIVE;
-        bmi08x_dev.accel_cfg.range = BMI088_ACCEL_RANGE_24G;
-
-        rslt = bmi08a_set_power_mode(&bmi08x_dev);
-        if (rslt == BMI08X_OK) {
-            rslt = bmi08a_set_meas_conf(&bmi08x_dev);
-        } else {
-            dev_err(&st->i2c->dev, "Accel power on failed.");
-        }
-
-        bmi08x_dev.gyro_cfg.bw = BMI08X_GYRO_BW_64_ODR_200_HZ;
-        bmi08x_dev.gyro_cfg.odr = BMI08X_GYRO_BW_64_ODR_200_HZ;
-        bmi08x_dev.gyro_cfg.power = BMI08X_GYRO_PM_NORMAL;
-        bmi08x_dev.gyro_cfg.range = BMI08X_GYRO_RANGE_250_DPS;
-
-        rslt = bmi08g_set_power_mode(&bmi08x_dev);
-        if (rslt == BMI08X_OK) {
-            dev_err(&st->i2c->dev, "bmi088 set_power_mode ok.");
-            rslt = bmi08g_set_meas_conf(&bmi08x_dev);
-        } else {
-            dev_err(&st->i2c->dev, "bmi088 Gyro power on failed.");
-        }
-
-    }
-
-    if (rslt == BMI08X_OK) {
-        dev_err(&st->i2c->dev, "Accel ID: 0x%02X", bmi08x_dev.accel_chip_id);
-        dev_err(&st->i2c->dev, "Gyro ID: 0x%02X", bmi08x_dev.gyro_chip_id);
-    } else {
-        dev_err(&st->i2c->dev, "BMI08x initial failed");
-    }
-
-    return rslt;
-}
-
 static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	int ret;
@@ -459,12 +474,6 @@ static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
         return -ENODEV;
     dev_err(&st->i2c->dev, "bmi08x_gyro_spec: %x\n", bmi08x_gyro_spec);
     dev_err(&st->i2c->dev, "bmi08x_accel_spec: %x\n", bmi08x_accel_spec);
-
-    ret = bmi088_init();
-    if (ret) {
-		bmi_remove(client);
-		return ret;
-	}
 
 	ret = devm_add_action_or_reset(&client->dev, bmi_remove, client);
 	if (ret)
