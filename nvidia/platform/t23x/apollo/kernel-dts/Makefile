@@ -11,6 +11,7 @@ endif
 
 # Apollo DTBs
 dtb-$(BUILD_ENABLE) += tegra234-p3767-apollo-evt.dtb
+dtb-$(BUILD_ENABLE) += tegra234-p3767-apollo-dvt.dtb
 
 # P3768 & P3509 DTBs
 dtb-$(BUILD_ENABLE) += tegra234-p3767-0000-p3509-a02.dtb
