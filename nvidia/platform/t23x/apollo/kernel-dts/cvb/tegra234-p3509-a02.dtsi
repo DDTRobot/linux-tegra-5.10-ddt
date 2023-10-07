@@ -18,7 +18,6 @@
 #include "tegra234-p3509-audio.dtsi"
 #include "tegra234-p3509-camera-ar0234.dtsi"
 #include "tegra234-sensor.dtsi"
-#include "tegra234-p3767-common-audio.dtsi"
 
 
 

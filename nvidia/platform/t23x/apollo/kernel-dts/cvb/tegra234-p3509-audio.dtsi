@@ -5,8 +5,6 @@
  * Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  */
-#include "tegra234-p3767-common-audio.dtsi"
 #include <audio/tegra-platforms-audio-dai-links.dtsi>
 #include <audio/tegra186-audio-dai-links.dtsi>
-
-
+#include "tegra234-p3767-common-audio.dtsi"
