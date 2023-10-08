@@ -1608,14 +1608,12 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
 		drv->op_mode = _iwl_op_mode_start(drv, op);
 
 		if (!drv->op_mode) {
-			IWL_INFO(drv, "before internal unlock\n");
 			mutex_unlock(&iwlwifi_opmode_table_mtx);
 			goto out_unbind;
 		}
 	} else {
 		load_module = true;
 	}
-	IWL_INFO(drv, "before unlock iwlwifi_opmode_table_mtx\n");
 	mutex_unlock(&iwlwifi_opmode_table_mtx);
 
 	/*
@@ -1754,24 +1752,19 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
 	struct iwl_drv *drv;
 	struct iwlwifi_opmode_table *op;
 
-	pr_info("Registering %s\n", name);
-	pr_info("before mutex_lock\n");
 	mutex_lock(&iwlwifi_opmode_table_mtx);
 	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++) {
-		pr_info("in for loop : %d\n", i);
 		op = &iwlwifi_opmode_table[i];
 		if (strcmp(op->name, name))
 			continue;
 		op->ops = ops;
 		/* TODO: need to handle exceptional case */
 		list_for_each_entry(drv, &op->drv, list) {
-			pr_info("in for subloop : %d\n", i);
 			drv->op_mode = _iwl_op_mode_start(drv, op);
 		}
 		mutex_unlock(&iwlwifi_opmode_table_mtx);
 		return 0;
 	}
-	pr_info("after mutex_lock\n");
 	mutex_unlock(&iwlwifi_opmode_table_mtx);
 	return -EIO;
 }
