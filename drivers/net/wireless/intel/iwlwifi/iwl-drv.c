@@ -1308,6 +1308,7 @@ _iwl_op_mode_start(struct iwl_drv *drv, struct iwlwifi_opmode_table *op)
 	struct iwl_op_mode *op_mode = NULL;
 	int retry, max_retry = !!iwlwifi_mod_params.fw_restart * IWL_MAX_INIT_RETRY;
 
+	pr_info("for retry max value: %d\n", max_retry);
 	for (retry = 0; retry <= max_retry; retry++) {
 
 #ifdef CONFIG_IWLWIFI_DEBUGFS
@@ -1600,8 +1601,6 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
 	IWL_INFO(drv, "loaded firmware version %s op_mode %s\n",
 		 drv->fw.fw_version, op->name);
 
-	iwl_dbg_tlv_load_bin(drv->trans->dev, drv->trans);
-
 	/* add this device to the list of devices using this op_mode */
 	list_add_tail(&drv->list, &op->drv);
 
@@ -1609,12 +1608,14 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
 		drv->op_mode = _iwl_op_mode_start(drv, op);
 
 		if (!drv->op_mode) {
+			IWL_INFO(drv, "before internal unlock\n");
 			mutex_unlock(&iwlwifi_opmode_table_mtx);
 			goto out_unbind;
 		}
 	} else {
 		load_module = true;
 	}
+	IWL_INFO(drv, "before unlock iwlwifi_opmode_table_mtx\n");
 	mutex_unlock(&iwlwifi_opmode_table_mtx);
 
 	/*
@@ -1753,19 +1754,24 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
 	struct iwl_drv *drv;
 	struct iwlwifi_opmode_table *op;
 
+	pr_info("Registering %s\n", name);
+	pr_info("before mutex_lock\n");
 	mutex_lock(&iwlwifi_opmode_table_mtx);
 	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++) {
+		pr_info("in for loop : %d\n", i);
 		op = &iwlwifi_opmode_table[i];
 		if (strcmp(op->name, name))
 			continue;
 		op->ops = ops;
 		/* TODO: need to handle exceptional case */
-		list_for_each_entry(drv, &op->drv, list)
+		list_for_each_entry(drv, &op->drv, list) {
+			pr_info("in for subloop : %d\n", i);
 			drv->op_mode = _iwl_op_mode_start(drv, op);
-
+		}
 		mutex_unlock(&iwlwifi_opmode_table_mtx);
 		return 0;
 	}
+	pr_info("after mutex_lock\n");
 	mutex_unlock(&iwlwifi_opmode_table_mtx);
 	return -EIO;
 }
