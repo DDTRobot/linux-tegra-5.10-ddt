@@ -854,7 +854,7 @@ static long ch201_ioctl(struct file *file,
 			handle_data_ready(grp_ptr);
 			while(interrupt_flag != 1)
 			{
-				mdelay(10);
+				mdelay(1);
 			}
 			range = chirp_data[0].range / 32;
 			amplitude = chirp_data[0].amplitude;

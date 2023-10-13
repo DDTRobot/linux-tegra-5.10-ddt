@@ -72,7 +72,8 @@
 /* Flags for special I2C handling by Chirp driver */
 #define I2C_DRV_FLAGS	(I2C_DRV_FLAG_RESET_AFTER_NB | I2C_DRV_FLAG_USE_PROG_NB)        // reset i2c interface after non-blocking
 
-#define	MEASUREMENT_INTERVAL_MS		100     // 100ms interval = 10Hz sampling
+// #define	MEASUREMENT_INTERVAL_MS		100     // 100ms interval = 10Hz sampling
+#define	MEASUREMENT_INTERVAL_MS		20     // 20ms interval = 50Hz sampling
 
 /*============================ Sensor Configuration =============================*/
 
@@ -81,7 +82,8 @@
  *   initialize the ch_config_t structure passed during the ch_set_config() 
  *   call.  
  */
-#define	CHIRP_SENSOR_MAX_RANGE_MM		2000    /* maximum range, in mm */
+// #define	CHIRP_SENSOR_MAX_RANGE_MM		2000    /* maximum range, in mm */
+#define	CHIRP_SENSOR_MAX_RANGE_MM		1000    /* maximum range, in mm */
 
 #define	CHIRP_SENSOR_STATIC_RANGE		0       /* static target rejection sample 
                                                            range, in samples (0=disabled) */
