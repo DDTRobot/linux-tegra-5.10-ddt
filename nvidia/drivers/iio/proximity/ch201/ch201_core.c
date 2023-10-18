@@ -951,8 +951,10 @@ RESET_AND_LOAD:
         ret = ch_group_start(ch201_data->chirp_group);
     }
 
-	dev_err(&client->dev, "done.\n");
-	dev_err(&client->dev, ".ko load success 202307121423.\n");
+	if (ret) {
+		dev_err(&client->dev, "starting group failed \r\n");
+        return -1;
+	}
 
 	ch201_data->i2c_addr = CHIRP_APP_I2C_ADDRS;
 	chbsp_delay_ms(1);
@@ -970,19 +972,9 @@ RESET_AND_LOAD:
         ret = ch_group_start_r(ch201_data->chirp_group);
     }
 
-	for (dev_num = 0; dev_num < num_ports; dev_num++) {
-		dev_ptr = ch_get_dev_ptr(grp_ptr, dev_num);
-
-		if (ch_sensor_is_connected(dev_ptr)) {
-
-			printk("%d\tCH%d\t%u Hz\t%u Hz\t%u@%ums\t%s\n", dev_num,
-											ch_get_part_number(dev_ptr),
-											(unsigned int) ch_get_frequency(dev_ptr),
-											(unsigned int) ch_get_bandwidth(dev_ptr),
-											ch_get_rtc_cal_result(dev_ptr),
-											ch_get_rtc_cal_pulselength(dev_ptr),
-											ch_get_fw_version_string(dev_ptr));
-		}
+	if (ret) {
+		dev_err(&client->dev, "starting group r failed \r\n");
+        return -1;
 	}
 
 	/* Configure each sensor with its operating parameters
@@ -990,7 +982,7 @@ RESET_AND_LOAD:
 	 *   app_config.h header file, then write the configuration to the
 	 *   sensor using ch_set_config().
 	 */
-	printk ("ch201 Configuring sensor(s)...\n");
+	dev_info(&client->dev, "ch201 Configuring sensor(s)...\n");
 	for (dev_num = 0; dev_num < num_ports; dev_num++) {
 		
 		dev_ptr = ch_get_dev_ptr(grp_ptr, dev_num);
@@ -1036,7 +1028,7 @@ RESET_AND_LOAD:
 			if (!ret) {
 				display_config_info(dev_ptr);
 			} else {
-				printk("ch201 Device %d: Error during ch_set_config()\n", dev_num);
+				dev_err(&client->dev, "ch201 Device %d: Error during ch_set_config()\n", dev_num);
 			}
 
 			/* Get number of active samples per measurement */
@@ -1051,7 +1043,7 @@ RESET_AND_LOAD:
 
 	ret = misc_register(&sen_ulsonic_miscdev);
 	if (ret) {
-		pr_err("stmvl53l5cx : Failed to create misc device, err = %d\n", ret);
+		dev_err(&client->dev, "stmvl53l5cx : Failed to create misc device, err = %d\n", ret);
 		return -1;
 	}
 
