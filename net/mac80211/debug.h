@@ -124,11 +124,11 @@ do {									\
 #endif
 
 #define sdata_info(sdata, fmt, ...)					\
-	_sdata_info(sdata, fmt, ##__VA_ARGS__)
+	_sdata_dbg(0, sdata, fmt, ##__VA_ARGS__)
 #define sdata_err(sdata, fmt, ...)					\
 	_sdata_err(sdata, fmt, ##__VA_ARGS__)
 #define sdata_dbg(sdata, fmt, ...)					\
-	_sdata_dbg(1, sdata, fmt, ##__VA_ARGS__)
+	_sdata_dbg(0, sdata, fmt, ##__VA_ARGS__)
 
 #define ht_dbg(sdata, fmt, ...)						\
 	_sdata_dbg(MAC80211_HT_DEBUG,					\
