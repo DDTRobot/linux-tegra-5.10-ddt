@@ -345,12 +345,9 @@ static const struct snd_kcontrol_new tas5805m_vol_control =
 
 static int tas5805m_snd_probe(struct snd_soc_component *component)
 {
-    int ret;
-	pr_err(" %s(%d)\n", __func__, __LINE__);
-	pr_err("in probe\n");
-     ret = snd_soc_add_component_controls(component, &tas5805m_vol_control, 1);
-	 printk("tas5805m_snd_probe ret:%d",ret);
-    return ret;
+  int ret;
+  ret = snd_soc_add_component_controls(component, &tas5805m_vol_control, 1);
+  return ret;
 }
 
 static struct snd_soc_component_driver soc_codec_tas5805m = {
