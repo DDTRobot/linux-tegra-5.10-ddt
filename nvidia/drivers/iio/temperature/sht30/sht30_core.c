@@ -214,6 +214,7 @@ static int sht30_probe(struct i2c_client *client,
 	if(ret)
 	{
 		pr_err("sht30 get status failed\n");
+		return -EIO;
 	} else {
 		pr_info("sht30 get status :%x %x", status[1], status[0]);
 	}
