@@ -121,17 +121,19 @@ IWL_EXPORT_SYMBOL(iwl_acpi_get_object);
 static void *iwl_acpi_get_dsm_object(struct device *dev, int rev, int func,
 				     union acpi_object *args)
 {
-	union acpi_object *obj;
 
-	obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), &intel_wifi_guid, rev, func,
-				args);
-	if (!obj) {
-		IWL_DEBUG_DEV_RADIO(dev,
-				    "ACPI: DSM method invocation failed (rev: %d, func:%d)\n",
-				    rev, func);
-		return ERR_PTR(-ENOENT);
-	}
-	return obj;
+	return ERR_PTR(-ENOENT);
+	// union acpi_object *obj;
+
+	// obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), &intel_wifi_guid, rev, func,
+	// 			args);
+	// if (!obj) {
+	// 	IWL_DEBUG_DEV_RADIO(dev,
+	// 			    "ACPI: DSM method invocation failed (rev: %d, func:%d)\n",
+	// 			    rev, func);
+	// 	return ERR_PTR(-ENOENT);
+	// }
+	// return obj;
 }
 
 /**
