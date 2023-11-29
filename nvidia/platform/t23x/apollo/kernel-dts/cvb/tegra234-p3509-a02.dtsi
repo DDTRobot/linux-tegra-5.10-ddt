@@ -16,7 +16,7 @@
 #include "tegra234-p3509-a02-pcie.dtsi"
 #include "tegra234-p3509-a02-fixed-regulator.dtsi"
 #include "tegra234-p3509-audio.dtsi"
-#include "tegra234-p3509-camera-ar0234.dtsi"
+#include "tegra234-a600-v11-camera-hawk.dtsi"
 #include "tegra234-sensor.dtsi"
 
 

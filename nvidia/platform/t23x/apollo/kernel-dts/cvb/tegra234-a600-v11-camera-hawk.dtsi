@@ -1,0 +1,400 @@
+
+
+#define	CAM_PWDN TEGRA234_MAIN_GPIO(P, 0) // CAN0_MCLK
+#define CAM_FSYNC TEGRA234_MAIN_GPIO(P, 1) // CAM1_MCLK
+#define CAM_IMU_INT0 TEGRA234_MAIN_GPIO(H, 6) // CAM0_PWDN
+#define CAM_IMU_INT1 TEGRA234_MAIN_GPIO(AC, 0) // CAM1_PWDN
+
+
+/ {
+
+	gpio@2200000 {
+		camera-imu-input {
+			gpios = <CAM_IMU_INT0 0 CAM_IMU_INT1 0>;
+			label = "cam-imu-int0", "cam-imu-int1";
+		};
+		camera-fsync-input {
+			gpios = <CAM_FSYNC 0>;
+			label = "cam-fsync";
+		};
+		camera-pwdn-output {
+			gpio-hog;
+			output-low;
+			gpios = <CAM_PWDN 0>;
+			label = "cam-pwdn";
+		};
+	};
+
+	tegra-capture-vi {
+		num-channels = <2>;
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			port@0 {
+				reg = <0>;
+				hawk_vi_in0: endpoint {
+					vc-id = <0>;
+					port-index = <0>;
+					bus-width = <4>;
+					remote-endpoint = <&hawk_csi_out0>;
+				};
+			};
+			port@1 {
+				reg = <1>;
+				hawk_vi_in1: endpoint {
+					vc-id = <1>;
+					port-index = <0>;
+					bus-width = <4>;
+					remote-endpoint = <&hawk_csi_out1>;
+				};
+			};
+		};
+	};
+
+	host1x@13e00000 {
+		nvcsi@15a00000 {
+			num-channels = <2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			channel@0 {
+				reg = <0>;
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					port@0 {
+						reg = <0>;
+						hawk_csi_in0: endpoint@0 {
+							port-index = <0>;
+							bus-width = <4>;
+							remote-endpoint = <&hawk_out0>;
+						};
+					};
+					port@1 {
+						reg = <1>;
+						hawk_csi_out0: endpoint@1 {
+							remote-endpoint = <&hawk_vi_in0>;
+						};
+					};
+				};
+			};
+			channel@1 {
+				reg = <1>;
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					port@0 {
+						reg = <0>;
+						hawk_csi_in1: endpoint@2 {
+							port-index = <0>;
+							bus-width = <4>;
+							remote-endpoint = <&hawk_out1>;
+						};
+					};
+					port@1 {
+						reg = <1>;
+						hawk_csi_out1: endpoint@3 {
+							remote-endpoint = <&hawk_vi_in1>;
+						};
+					};
+				};
+			};
+		};
+	};
+
+	i2c@3180000 {
+		max9296@4a {
+			compatible = "maxim,max9296";
+			reg = <0x4a>;
+			channel = "a";
+			pwdn-gpios = <&tegra_main_gpio CAM_PWDN GPIO_ACTIVE_HIGH>;
+		};
+
+		hawk_front_left: ar0234_a@18 {
+			compatible = "onsemi,ar0234";
+
+			reg = <0x18>;
+
+			physical_w = "15.0";
+			physical_h = "12.5";
+
+			sensor_model ="ar0234";
+			sync_sensor = "HAWK1";
+			sync_sensor_index = <1>;
+			supports-alt-exp = "true";
+
+			channel = "a";
+			has-eeprom;
+
+			post_crop_frame_drop = "0";
+
+			use_sensor_mode_id = "true";
+
+			mode0 { /* mode 1920x1200_10Bit */
+				mclk_khz = "25000";
+				num_lanes = "4";
+				lane_polarity = "6";
+				tegra_sinterface = "serial_a";
+				phy_mode = "DPHY";
+				vc_id = "0";
+				discontinuous_clk = "no";
+				dpcm_enable = "false";
+				cil_settletime = "0";
+				dynamic_pixel_bit_depth = "10";
+				csi_pixel_bit_depth = "10";
+				mode_type = "bayer";
+				pixel_phase = "grbg";
+
+				active_w = "1920";
+				active_h = "1200";
+				readout_orientation = "0";
+				line_length = "2448";
+				inherent_gain = "1";
+				pix_clk_hz = "360000000";
+				serdes_pix_clk_hz = "600000000";
+
+				gain_factor = "100";
+				min_gain_val = "100"; /* dB */
+				max_gain_val = "1600"; /* dB */
+				step_gain_val = "1"; /* 0.1 */
+				default_gain = "100";
+				min_hdr_ratio = "1";
+				max_hdr_ratio = "1";
+				framerate_factor = "1000000";
+				min_framerate = "30000000";
+				max_framerate = "90000000";
+				step_framerate = "30000000";
+				default_framerate = "60000000";
+				exposure_factor = "1000000";
+				min_exp_time = "14"; /* us, 2 lines */
+				max_exp_time = "33334";
+				step_exp_time = "1";
+				default_exp_time = "8333"; /* us */
+				embedded_metadata_height = "0";
+			};
+
+			mode1 { /* mode 960x600_10Bit */
+				mclk_khz = "25000";
+				num_lanes = "4";
+				lane_polarity = "6";
+				tegra_sinterface = "serial_a";
+				phy_mode = "DPHY";
+				vc_id = "0";
+				discontinuous_clk = "no";
+				dpcm_enable = "false";
+				cil_settletime = "0";
+				dynamic_pixel_bit_depth = "10";
+				csi_pixel_bit_depth = "10";
+				mode_type = "bayer";
+				pixel_phase = "grbg";
+
+				active_w = "960";
+				active_h = "600";
+				readout_orientation = "0";
+				line_length = "2448";
+				inherent_gain = "1";
+				pix_clk_hz = "360000000";
+				serdes_pix_clk_hz = "600000000";
+
+				gain_factor = "100";
+				min_gain_val = "100"; /* dB */
+				max_gain_val = "1600"; /* dB */
+				step_gain_val = "1"; /* 0.1 */
+				default_gain = "100";
+				min_hdr_ratio = "1";
+				max_hdr_ratio = "1";
+				framerate_factor = "1000000";
+				min_framerate = "30000000";
+				max_framerate = "120000000";
+				step_framerate = "30000000";
+				default_framerate = "60000000";
+				exposure_factor = "1000000";
+				min_exp_time = "14"; /* us, 2 lines */
+				max_exp_time = "33334";
+				step_exp_time = "1";
+				default_exp_time = "8333"; /* us */
+				embedded_metadata_height = "0";
+			};
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				port@0 {
+					reg = <0>;
+					hawk_out0: endpoint {
+						vc-id = <0>;
+						port-index = <0>;
+						bus-width = <4>;
+						remote-endpoint = <&hawk_csi_in0>;
+					};
+				};
+			};
+		};
+
+		hawk_front_right: ar0234_b@10 {
+			compatible = "onsemi,ar0234";
+
+			reg = <0x10>;
+
+			physical_w = "15.0";
+			physical_h = "12.5";
+
+			sensor_model ="ar0234";
+			sync_sensor = "HAWK1";
+			sync_sensor_index = <2>;
+			supports-alt-exp = "true";
+
+			channel = "n";
+			// has-eeprom;
+
+			post_crop_frame_drop = "0";
+
+			use_sensor_mode_id = "true";
+
+			mode0 { /* mode 1920x1200_10Bit */
+				mclk_khz = "25000";
+				num_lanes = "4";
+				lane_polarity = "6";
+				tegra_sinterface = "serial_a";
+				phy_mode = "DPHY";
+				vc_id = "1";
+				discontinuous_clk = "no";
+				dpcm_enable = "false";
+				cil_settletime = "0";
+				dynamic_pixel_bit_depth = "10";
+				csi_pixel_bit_depth = "10";
+				mode_type = "bayer";
+				pixel_phase = "grbg";
+
+				active_w = "1920";
+				active_h = "1200";
+				readout_orientation = "0";
+				line_length = "2448";
+				inherent_gain = "1";
+				pix_clk_hz = "360000000";
+				serdes_pix_clk_hz = "600000000";
+
+				gain_factor = "100";
+				min_gain_val = "100"; /* dB */
+				max_gain_val = "1600"; /* dB */
+				step_gain_val = "1"; /* 0.1 */
+				default_gain = "100";
+				min_hdr_ratio = "1";
+				max_hdr_ratio = "1";
+				framerate_factor = "1000000";
+				min_framerate = "30000000";
+				max_framerate = "90000000";
+				step_framerate = "30000000";
+				default_framerate = "60000000";
+				exposure_factor = "1000000";
+				min_exp_time = "14"; /* us, 2 lines */
+				max_exp_time = "33334";
+				step_exp_time = "1";
+				default_exp_time = "8333"; /* us */
+				embedded_metadata_height = "0";
+			};
+
+			mode1 { /* mode 960x600_10Bit */
+				mclk_khz = "25000";
+				num_lanes = "4";
+				lane_polarity = "6";
+				tegra_sinterface = "serial_a";
+				phy_mode = "DPHY";
+				vc_id = "1";
+				discontinuous_clk = "no";
+				dpcm_enable = "false";
+				cil_settletime = "0";
+				dynamic_pixel_bit_depth = "10";
+				csi_pixel_bit_depth = "10";
+				mode_type = "bayer";
+				pixel_phase = "grbg";
+
+				active_w = "960";
+				active_h = "600";
+				readout_orientation = "0";
+				line_length = "2448";
+				inherent_gain = "1";
+				pix_clk_hz = "360000000";
+				serdes_pix_clk_hz = "600000000";
+
+				gain_factor = "100";
+				min_gain_val = "100"; /* dB */
+				max_gain_val = "1600"; /* dB */
+				step_gain_val = "1"; /* 0.1 */
+				default_gain = "100";
+				min_hdr_ratio = "1";
+				max_hdr_ratio = "1";
+				framerate_factor = "1000000";
+				min_framerate = "30000000";
+				max_framerate = "120000000";
+				step_framerate = "30000000";
+				default_framerate = "60000000";
+				exposure_factor = "1000000";
+				min_exp_time = "14"; /* us, 2 lines */
+				max_exp_time = "33334";
+				step_exp_time = "1";
+				default_exp_time = "8333"; /* us */
+				embedded_metadata_height = "0";
+			};
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				port@0 {
+					reg = <0>;
+					hawk_out1: endpoint {
+						vc-id = <1>;
+						port-index = <0>;
+						bus-width = <4>;
+						remote-endpoint = <&hawk_csi_in1>;
+					};
+				};
+			};
+		};
+
+		bmi088_a@69 {
+			compatible = "bmi,bmi088";
+			reg = <0x69>;
+			accel_i2c_addr = <0x19>;
+			accel_irq_gpio = <&tegra_main_gpio CAM_IMU_INT0 GPIO_ACTIVE_HIGH>;
+			gyro_irq_gpio = <&tegra_main_gpio CAM_IMU_INT1 GPIO_ACTIVE_HIGH>;
+			accel_matrix = [01 00 00 00 01 00 00 00 01];
+			gyro_matrix = [01 00 00 00 01 00 00 00 01];
+			gyro_reg_0x18 = <0x81>;
+		};
+    };
+
+	tegra-camera-platform {
+		compatible = "nvidia, tegra-camera-platform";
+		num_csi_lanes = <4>;
+		max_lane_speed = <20000000>;
+		min_bits_per_pixel = <10>;
+		vi_peak_byte_per_pixel = <2>;
+		vi_bw_margin_pct = <25>;
+		isp_peak_byte_per_pixel = <5>;
+		isp_bw_margin_pct = <25>;
+
+		modules {
+			module0 {
+				badge = "hawk_0_ar0234";
+				position = "0";
+				orientation = "1";
+				drivernode0 {
+					pcl_id = "v4l2_sensor";
+					devname = "ar0234 2-0018";
+					proc-device-tree = "/proc/device-tree/i2c@3180000/ar0234_a@18";
+				};
+			};
+			module1 {
+				badge = "hawk_1_ar0234";
+				position = "1";
+				orientation = "1";
+				drivernode0 {
+					pcl_id = "v4l2_sensor";
+					devname = "ar0234 2-0010";
+					proc-device-tree = "/proc/device-tree/i2c@3180000/ar0234_b@10";
+				};
+			};
+		};
+	};
+}; 
+ 
