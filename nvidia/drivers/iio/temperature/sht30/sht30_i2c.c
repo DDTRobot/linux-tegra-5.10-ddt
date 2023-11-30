@@ -122,23 +122,19 @@ int32_t sht30_read_no_regaddr(
     uint32_t count)
 {
     int32_t status = 0;
-
     struct i2c_msg message;
 
     message.addr  = 0x44;
-
     message.flags = 1;
-	message.buf   = p_value;
-	message.len   = count;
+		message.buf   = p_value;
+		message	.len   = count;
 
     status = i2c_transfer(client->adapter, &message, 1);
     //printk("read no addr status: %d\n", status);
     if (status != 1)
 		return status;
-
     udelay(1000);
-
-	return 0;
+		return 0;
 }
 
 int32_t sht30_write_no_regaddr(
