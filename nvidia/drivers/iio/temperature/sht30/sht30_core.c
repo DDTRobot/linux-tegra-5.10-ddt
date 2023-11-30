@@ -150,10 +150,7 @@ static long sht30_ioctl(struct file *file,
 		case SEN_HUMI_IOCTL_MEASURE:
 			ret = sht3x_measure_blocking_read(&temperature, &humidity);
 			if (ret != 0) {
-				pr_err("sht30 temperature: %d degreeCelsius, humidity: %d percentRH\n", 
-					temperature / 1000, humidity / 1000);
-			} else {
-				pr_err("error reading measurement\n");
+				pr_err("sht30: error reading measurement\n");
 			}
 
 			// copy to user buffer the read transfer
