@@ -32,54 +32,47 @@
 #include <media/tegracam_core.h>
 #include "ar0234_mode_tbls.h"
 
+#define CHANNEL_A 0
 #define CHANNEL_N 13
-#define MAX_RADIAL_COEFFICIENTS         6
-#define MAX_TANGENTIAL_COEFFICIENTS     2
-#define MAX_FISHEYE_COEFFICIENTS        6
+#define MAX_RADIAL_COEFFICIENTS 6
+#define MAX_TANGENTIAL_COEFFICIENTS 2
+#define MAX_FISHEYE_COEFFICIENTS 6
 #define CAMERA_MAX_SN_LENGTH 32
 #define LEOP_CAMERA_MAX_SN_LENGTH 10
 
 #define MAX_RLS_COLOR_CHANNELS 4
 #define MAX_RLS_BREAKPOINTS 6
 
-extern int max96712_write_reg_Dser(int slaveAddr,int channel,
-		u16 addr, u8 val);
+extern int max96712_write_reg_Dser(int slaveAddr, int channel, u16 addr,
+				   u8 val);
 
-extern int max96712_read_reg_Dser(int slaveAddr,int channel,
-		                u16 addr, unsigned int *val);
+extern int max96712_read_reg_Dser(int slaveAddr, int channel, u16 addr,
+				  unsigned int *val);
 
-#define AR0234_MIN_GAIN         (1)
-#define AR0234_MAX_GAIN         (8)
-#define AR0234_MAX_GAIN_REG     (0x40)
-#define AR0234_DEFAULT_FRAME_LENGTH    (1216)
-#define AR0234_COARSE_TIME_SHS1_ADDR    0x3012
-#define AR0234_CTX_CONTROL_REG_ADDR	0x3034
-#define AR0234_CTX_WR_DATA_REG_ADDR	0x3066
-#define AR0234_ANALOG_GAIN    0x3060
+#define AR0234_MIN_GAIN (1)
+#define AR0234_MAX_GAIN (8)
+#define AR0234_MAX_GAIN_REG (0x40)
+#define AR0234_DEFAULT_FRAME_LENGTH (1224)
+#define AR0234_COARSE_TIME_SHS1_ADDR 0x3012
+#define AR0234_ANALOG_GAIN 0x3060
 
 const struct of_device_id ar0234_of_match[] = {
-	{.compatible = "onsemi,ar0234",},
-	{ },
+	{
+		.compatible = "nvidia,ar0234",
+	},
+	{},
 };
 MODULE_DEVICE_TABLE(of, ar0234_of_match);
 
 static const u32 ctrl_cid_list[] = {
-	TEGRA_CAMERA_CID_GAIN,
-	TEGRA_CAMERA_CID_EXPOSURE,
-	TEGRA_CAMERA_CID_EXPOSURE_SHORT,
-	TEGRA_CAMERA_CID_FRAME_RATE,
-	TEGRA_CAMERA_CID_EEPROM_DATA,
-	TEGRA_CAMERA_CID_HDR_EN,
-	TEGRA_CAMERA_CID_SENSOR_MODE_ID,
-	TEGRA_CAMERA_CID_STEREO_EEPROM,
-	TEGRA_CAMERA_CID_ALTERNATING_EXPOSURE,
+	TEGRA_CAMERA_CID_GAIN,		 TEGRA_CAMERA_CID_EXPOSURE,
+	TEGRA_CAMERA_CID_EXPOSURE_SHORT, TEGRA_CAMERA_CID_FRAME_RATE,
+	TEGRA_CAMERA_CID_EEPROM_DATA,	 TEGRA_CAMERA_CID_HDR_EN,
+	TEGRA_CAMERA_CID_SENSOR_MODE_ID, TEGRA_CAMERA_CID_STEREO_EEPROM,
 };
 
-const u16 alternating_exposure_cfg_size = sizeof(struct alternating_exposure_cfg);
-
 // Coefficients as per distortion model (wide FOV) being used
-typedef struct
-{
+typedef struct {
 	// Radial coefficients count
 	u32 coeff_count;
 	// Radial coefficients
@@ -89,8 +82,7 @@ typedef struct
 } fisheye_lens_distortion_coeff;
 
 // Coefficients as per distortion model being used
-typedef struct
-{
+typedef struct {
 	// Radial coefficients count
 	u32 radial_coeff_count;
 	// Radial coefficients
@@ -104,8 +96,7 @@ typedef struct
 /*
  * Stereo Eeprom Data
  */
-typedef struct
-{
+typedef struct {
 	// Width and height of image in pixels
 	u32 width, height;
 	// Focal length in pixels
@@ -130,8 +121,7 @@ typedef struct
  * Extrinsic parameters shared by camera and IMU.
  * All rotation + translation with respect to the same reference point
  */
-typedef struct
-{
+typedef struct {
 	/*
 	 * Rotation parameter expressed in Rodrigues notation
 	 * angle = sqrt(rx^2+ry^2+rz^2)
@@ -142,14 +132,7 @@ typedef struct
 	float tx, ty, tz;
 } camera_extrinsics;
 
-/*
- * IMU parameters used by HAWK 1.0. HAWK 1.0 did not have IMU noise model parameters
- * in EEPROM. To preserve backward compatibility with HAWK 1.0, the EEPROM data is arranged
- * in a certain way which requires tracking the imu noise model parameters in a
- * separate structure.
- */
-typedef struct
-{
+typedef struct {
 	// 3D vector to add to accelerometer readings
 	float linear_acceleration_bias[3];
 	// 3D vector to add to gyroscope readings
@@ -159,6 +142,14 @@ typedef struct
 	// Extrinsic structure for IMU device
 	camera_extrinsics extr;
 
+	/*
+	// Noise model parameters
+	float update_rate;
+	float linear_acceleration_noise_density;
+	float linear_acceleration_random_walk;
+	float angular_velocity_noise_density;
+	float angular_velocity_random_walk;
+*/
 } imu_params_v1;
 
 typedef struct {
@@ -174,9 +165,6 @@ typedef struct {
 
 } imu_params_noise_m;
 
-/*
- * Combined IMU calibration data structure
- */
 typedef struct {
 	imu_params_v1 imu_data_v1;
 	imu_params_noise_m nm;
@@ -213,8 +201,7 @@ typedef struct {
 	u8 r_scale;
 } radial_lsc_params;
 
-typedef struct
-{
+typedef struct {
 	// Intrinsic structure for  camera device
 	camera_intrinsics cam_intr;
 
@@ -234,8 +221,7 @@ typedef struct
 	radial_lsc_params rls;
 } NvCamSyncSensorCalibData;
 
-typedef struct
-{
+typedef struct {
 	/**
 	 * EEPROM layout version
 	 */
@@ -264,28 +250,28 @@ typedef struct
 	imu_params_v1 imu;
 
 	u8 tmp[16];
+	//	u8 serial_num_length;
 
 	// HAWK module serial number
 	u8 serial_number[LEOP_CAMERA_MAX_SN_LENGTH];
 
 	imu_params_noise_m nm;
-
 	// Radial Lens Shading Correction parameters
-	radial_lsc_params left_rls;
-	radial_lsc_params right_rls;
+	//	radial_lsc_params left_rls;
+	//	radial_lsc_params right_rls;
 } LiEeprom_Content_Struct;
 
 struct ar0234 {
 	struct camera_common_eeprom_data eeprom[AR0234_EEPROM_NUM_BLOCKS];
-	u8                              eeprom_buf[AR0234_EEPROM_SIZE];
-	struct i2c_client	*i2c_client;
+	u8 eeprom_buf[AR0234_EEPROM_SIZE];
+	struct i2c_client *i2c_client;
 	const struct i2c_device_id *id;
-	struct v4l2_subdev	*subdev;
-	u32	frame_length;
-	struct camera_common_data	*s_data;
-	struct tegracam_device		*tc_dev;
-	u32                             channel;
-	u32 	sync_sensor_index;
+	struct v4l2_subdev *subdev;
+	u32 frame_length;
+	struct camera_common_data *s_data;
+	struct tegracam_device *tc_dev;
+	u32 channel;
+	u32 sync_sensor_index;
 	NvCamSyncSensorCalibData EepromCalib;
 };
 
@@ -296,51 +282,23 @@ static const struct regmap_config sensor_regmap_config = {
 };
 
 static inline void ar0234_get_coarse_time_regs_shs1(ar0234_reg *regs,
-		u16 coarse_time)
+						    u16 coarse_time)
 {
 	regs->addr = AR0234_COARSE_TIME_SHS1_ADDR;
-	regs->val = (coarse_time) & 0xffff;
-
+	regs->val = (coarse_time)&0xffff;
 }
 
-static inline void ar0234_get_gain_reg(ar0234_reg *regs,
-		u16 gain)
+static inline void ar0234_get_gain_reg(ar0234_reg *regs, u16 gain)
 {
 	regs->addr = AR0234_ANALOG_GAIN;
-	regs->val = (gain) & 0xffff;
-
-}
-
-static inline void ar0234_compute_gain_reg(u16 *gain_reg,
-		u16 *gain, s64 val)
-{
-	if (val < 200) {
-		*gain_reg = (32 * (1000 - (100000 / *gain)))/1000;
-	} else if (val < 400 && val >= 200) {
-		*gain = *gain / 2;
-		*gain_reg = (16 * (1000 - (100000 / *gain)))/1000 * 2;
-		*gain_reg = *gain_reg + 0x10;
-	} else if (val < 800 && val >= 400) {
-		*gain = *gain / 4;
-		*gain_reg = (32 * (1000 - (100000 / *gain)))/1000;
-		*gain_reg = *gain_reg + 0x20;
-	} else if (val < 1600 && val >= 800) {
-		*gain = *gain / 8;
-		*gain_reg = (16 * (1000 - (100000 / *gain)))/1000 * 2;
-		*gain_reg = *gain_reg + 0x30;
-	} else if (val >= 1600) {
-		*gain_reg = 0x40;
-	}
-
-	if (*gain_reg > AR0234_MAX_GAIN_REG)
-		*gain_reg = AR0234_MAX_GAIN_REG;
+	regs->val = (gain)&0xffff;
 }
 
 static int test_mode;
 module_param(test_mode, int, 0644);
 
-static inline int ar0234_read_reg(struct camera_common_data *s_data,
-		u16 addr, u16 *val)
+static inline int ar0234_read_reg(struct camera_common_data *s_data, u16 addr,
+				  u16 *val)
 {
 	int err = 0;
 	u32 reg_val = 0;
@@ -351,73 +309,48 @@ static inline int ar0234_read_reg(struct camera_common_data *s_data,
 	return err;
 }
 
-static int ar0234_write_reg(struct camera_common_data *s_data,
-		u16 addr, u16 val)
+static int ar0234_write_reg(struct camera_common_data *s_data, u16 addr,
+			    u16 val)
 {
 	int err;
 	struct device *dev = s_data->dev;
 
 	err = regmap_write(s_data->regmap, addr, val);
 	if (err)
-		dev_err(dev, "%s:i2c write failed, 0x%x = %x\n",
-				__func__, addr, val);
+		dev_err(dev, "%s:i2c write failed, 0x%x = %x\n", __func__, addr,
+			val);
 
 	return err;
 }
+// #if 0
+// static int ar0234_hawk_link_check(struct ar0234 *priv)
+// {
+// 	struct tegracam_device *tc_dev = priv->tc_dev;
+// 	struct device *dev = tc_dev->dev;
+// 	unsigned int linkA = 0;
+// 	unsigned int linkB = 0;
 
-static int ar0234_hawk_link_check(struct ar0234 *priv)
-{
-	struct tegracam_device *tc_dev = priv->tc_dev;
-	struct device *dev = tc_dev->dev;
-#if 0
-	unsigned int linkA = 0;
-	unsigned int linkB = 0;
-#else
-	unsigned int ctrl3 = 0;
-	unsigned int link_mode = 0;
-	unsigned int locked = 0;
-	unsigned int error = 0;
-#endif
+// 	dev_dbg(dev, "%s: channel %d, ", __func__, priv->channel);
 
-	dev_dbg(dev, "%s: channel %d, ", __func__, priv->channel);
+// 	if (priv->channel == CHANNEL_N)
+// 		return 3;
 
-	if (priv->channel == CHANNEL_N)
-		return 3;
+// 	max96712_read_reg_Dser(0x52, priv->channel, 0x1A, &linkA);
+// 	max96712_read_reg_Dser(0x52, priv->channel, 0x0A, &linkB);
 
-#if 0
-	max96712_read_reg_Dser(0x52, priv->channel, 0x1A, &linkA);
-	max96712_read_reg_Dser(0x52, priv->channel, 0x0A, &linkB);
+// 	dev_dbg(dev, "linA=%x, linB=%x\n", linkA, linkB);
+// 	if ((linkB & 0x8) && (linkA & 0x8)) {
+// 		return 2;
+// 	} else if (linkA & 0x8) {
+// 		return 1;
+// 	} else {
+// 		return 0;
+// 	}
 
-	dev_dbg(dev, "linA=%x, linB=%x\n", linkA, linkB);
-	if ((linkB & 0x8) && (linkA & 0x8)) {
-		return 2;
-	} else if (linkA & 0x8) {
-		return 1;
-	} else {
-		return 0;
-	}
-#else
-
-	max96712_read_reg_Dser(0x94, priv->channel, 0x13, &ctrl3);
-
-	link_mode = (ctrl3 & 0x30) >> 4;
-	locked = (ctrl3 & 0x08) >> 3;
-	error = (ctrl3 & 0x04) >> 2;
-
-	dev_dbg(dev, "lock_mode: %d, locked: %d, error: %d\n", link_mode, locked, error);
-	if (locked == 1 && link_mode == 3) {
-		return 2;
-	} else if (locked == 1 && link_mode != 0) {
-		return 1;
-	} else {
-		return 0;
-	}
-
-#endif
-}
-
+// }
+// // #endif
 static int ar0234_write_table(struct ar0234 *priv,
-		const struct index_reg_8 table[])
+			      const struct index_reg_8 table[])
 {
 	struct tegracam_device *tc_dev = priv->tc_dev;
 	struct device *dev = tc_dev->dev;
@@ -430,55 +363,58 @@ static int ar0234_write_table(struct ar0234 *priv,
 		if (table[i].source == 0x06) {
 			retry = 1;
 
-			if (table[i].addr == AR0234_TABLE_WAIT_MS)
-			{
-				dev_dbg(dev, "%s: sleep %d\n", __func__, table[i].val);
+			if (table[i].addr == AR0234_TABLE_WAIT_MS) {
+				dev_dbg(dev, "%s: sleep 500\n", __func__);
 				msleep(table[i].val);
 				i++;
 				continue;
 			}
-retry_sensor:
-			ret = ar0234_write_reg(priv->s_data, table[i].addr, table[i].val);
+		retry_sensor:
+			ret = ar0234_write_reg(priv->s_data, table[i].addr,
+					       table[i].val);
 			if (ret) {
 				retry--;
 				if (retry > 0) {
-					dev_warn(dev, "ar0234_write_reg: try %d\n", retry);
+					dev_warn(dev,
+						 "ar0234_write_reg: try %d\n",
+						 retry);
 					msleep(4);
 					goto retry_sensor;
 				}
 				return -1;
 			} else {
-				// 0x301A ar0234 reset, stream, stop
-				// 0x3060 ar0234 analog gain
-				if (0x301a == table[i].addr || 0x3060 == table[i].addr)
+				if (0x301a == table[i].addr ||
+				    0x3060 == table[i].addr)
 					msleep(100);
 			}
 		} else {
 			retry = 5;
 
-			if (priv->channel == CHANNEL_N)
-			{
+			if (priv->channel == CHANNEL_N) {
 				i++;
 				continue;
 			}
 
-retry_serdes:
-			ret = max96712_write_reg_Dser(table[i].source, priv->channel, table[i].addr, (u8)table[i].val);
-			if (ret && (table[i].addr != 0x0000))
-			{
+		retry_serdes:
+			ret = max96712_write_reg_Dser(table[i].source,
+						      priv->channel,
+						      table[i].addr,
+						      (u8)table[i].val);
+			if (ret && (table[i].addr != 0x0000)) {
 				retry--;
 				if (retry > 0) {
-					dev_warn(dev, "max96712_write_reg_Dser: try %d\n", retry);
+					dev_warn(
+						dev,
+						"max96712_write_reg_Dser: try %d\n",
+						retry);
 					msleep(4);
 					goto retry_serdes;
 				}
 				return -1;
 			}
-			// 0x0000 max9295/max96712 change address 
-			// 0x0010 max9295 reset
-			// 0x0006 max96712 switch link
-			// 0x0018 max96712 reset
-			if (0x0010 == table[i].addr || 0x0000 == table[i].addr || 0x0006 == table[i].addr || 0x0018 == table[i].addr)
+			if (0x0010 == table[i].addr ||
+			    0x0000 == table[i].addr ||
+			    0x0006 == table[i].addr || 0x0018 == table[i].addr)
 				msleep(300);
 			else
 				msleep(10);
@@ -505,14 +441,14 @@ static int ar0234_power_on(struct camera_common_data *s_data)
 		return err;
 	}
 
-	if (gpio_is_valid(pw->reset_gpio > 0))
-		gpio_set_value(pw->reset_gpio, 1);
+	// if (pw->reset_gpio > 0)
+	// 	gpio_set_value(pw->reset_gpio, 1);
 
-	usleep_range(1000, 2000);
-	if (gpio_is_valid(pw->reset_gpio > 0))
-		gpio_set_value(pw->reset_gpio, 1);
+	// usleep_range(1000, 2000);
+	// if (pw->reset_gpio > 0)
+	// 	gpio_set_value(pw->reset_gpio, 1);
 
-	usleep_range(10000, 20000);
+	// usleep_range(10000, 20000);
 	pw->state = SWITCH_ON;
 
 	return 0;
@@ -543,22 +479,16 @@ power_off_done:
 
 static int ar0234_power_get(struct tegracam_device *tc_dev)
 {
-#if 0
 	struct device *dev = tc_dev->dev;
-#endif
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct camera_common_power_rail *pw = s_data->power;
 	struct camera_common_pdata *pdata = s_data->pdata;
-#if 0
 	const char *mclk_name;
 	const char *parentclk_name;
 	struct clk *parent;
-#endif
 	int err = 0;
 
-#if 0
-	mclk_name = pdata->mclk_name ?
-		pdata->mclk_name : "cam_mclk1";
+	mclk_name = pdata->mclk_name ? pdata->mclk_name : "cam_mclk1";
 	pw->mclk = devm_clk_get(dev, mclk_name);
 	if (IS_ERR(pw->mclk)) {
 		dev_err(dev, "unable to get clock %s\n", mclk_name);
@@ -570,16 +500,15 @@ static int ar0234_power_get(struct tegracam_device *tc_dev)
 		parent = devm_clk_get(dev, parentclk_name);
 		if (IS_ERR(parent)) {
 			dev_err(dev, "unable to get parent clcok %s",
-					parentclk_name);
+				parentclk_name);
 		} else
 			clk_set_parent(pw->mclk, parent);
 	}
-#endif
-	if (!err) {
-		pw->reset_gpio = pdata->reset_gpio;
-		pw->af_gpio = pdata->af_gpio;
-		pw->pwdn_gpio = pdata->pwdn_gpio;
-	}
+	// if (!err) {
+	// 	pw->reset_gpio = pdata->reset_gpio;
+	// 	pw->af_gpio = pdata->af_gpio;
+	// 	pw->pwdn_gpio = pdata->pwdn_gpio;
+	// }
 
 	pw->state = SWITCH_OFF;
 
@@ -603,8 +532,7 @@ static int ar0234_set_group_hold(struct tegracam_device *tc_dev, bool val)
 	int err = 0;
 
 	if (err) {
-		dev_dbg(dev,
-				"%s: Group hold control error\n", __func__);
+		dev_dbg(dev, "%s: Group hold control error\n", __func__);
 		return err;
 	}
 
@@ -620,11 +548,28 @@ static int ar0234_set_gain(struct tegracam_device *tc_dev, s64 val)
 	u16 gain = (u16)val;
 	u16 gain_reg = 0;
 
-	ar0234_compute_gain_reg(&gain_reg, &gain, val);
+	if (val < 200) {
+		gain_reg = (32 * (1000 - (100000 / gain))) / 1000;
+	} else if (val < 400 && val >= 200) {
+		gain = gain / 2;
+		gain_reg = (16 * (1000 - (100000 / gain))) / 1000 * 2;
+		gain_reg = gain_reg + 0x10;
+	} else if (val < 800 && val >= 400) {
+		gain = gain / 4;
+		gain_reg = (32 * (1000 - (100000 / gain))) / 1000;
+		gain_reg = gain_reg + 0x20;
+	} else if (val < 1600 && val >= 800) {
+		gain = gain / 8;
+		gain_reg = (16 * (1000 - (100000 / gain))) / 1000 * 2;
+		gain_reg = gain_reg + 0x30;
+	} else if (val >= 1600) {
+		gain_reg = 0x40;
+	}
 
+	if (gain > AR0234_MAX_GAIN_REG)
+		gain = AR0234_MAX_GAIN_REG;
 	ar0234_get_gain_reg(reg_list, gain_reg);
-	err = ar0234_write_reg(s_data, reg_list[0].addr,
-			reg_list[0].val);
+	err = ar0234_write_reg(s_data, reg_list[0].addr, reg_list[0].val);
 	if (err)
 		goto fail;
 	return 0;
@@ -638,56 +583,22 @@ static int ar0234_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
 {
 	struct ar0234 *priv = (struct ar0234 *)tegracam_get_privdata(tc_dev);
 
-#if 0
-	if (val == 30000000) {  //30fps full resolution
-		max96712_write_reg_Dser(0x52, priv->channel, 0x04A5, 0x35);
-		max96712_write_reg_Dser(0x52, priv->channel, 0x04A6, 0xB7);
-		max96712_write_reg_Dser(0x52, priv->channel, 0x04A7, 0x0C);
+	if (val == 30000000) { //30fps full resolution
+		max96712_write_reg_Dser(0x94, priv->channel, 0x03E5, 0x35);
+		max96712_write_reg_Dser(0x94, priv->channel, 0x03E6, 0xB7);
+		max96712_write_reg_Dser(0x94, priv->channel, 0x03E7, 0x0C);
 		priv->frame_length = 0xC20;
-	} else if (val == 60000000) {//60fps full resolution
-		max96712_write_reg_Dser(0x52, priv->channel, 0x04A5, 0x9A);
-		max96712_write_reg_Dser(0x52, priv->channel, 0x04A6, 0x5B);
-		max96712_write_reg_Dser(0x52, priv->channel, 0x04A7, 0x06);
+	} else if (val == 60000000) { //60fps full resolution
+		max96712_write_reg_Dser(0x94, priv->channel, 0x03E5, 0x9A);
+		max96712_write_reg_Dser(0x94, priv->channel, 0x03E6, 0x5B);
+		max96712_write_reg_Dser(0x94, priv->channel, 0x03E7, 0x06);
 		priv->frame_length = 0x610;
-	} else if (val == 120000000) {//120fps binning resolution
-		max96712_write_reg_Dser(0x52, priv->channel, 0x04A5, 0xCD);
-		max96712_write_reg_Dser(0x52, priv->channel, 0x04A6, 0x2D);
-		max96712_write_reg_Dser(0x52, priv->channel, 0x04A7, 0x03);
+	} else if (val == 120000000) { //120fps binning resolution
+		max96712_write_reg_Dser(0x94, priv->channel, 0x03E5, 0xCD);
+		max96712_write_reg_Dser(0x94, priv->channel, 0x03E6, 0x2D);
+		max96712_write_reg_Dser(0x94, priv->channel, 0x03E7, 0x03);
 		priv->frame_length = 0x308;
 	}
-#else
-	dev_dbg(tc_dev->dev, "set_frame_rate: %d fps", (int)(val / 1000000));
-
-	if (val == 30000000) {
-		// 30fps full resolution
-		// 25Mhz / 30Hz = 833333(0x0CB735)
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A5, 0x35);
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A6, 0xB7);
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A7, 0x0C);
-		priv->frame_length = 0xC20; // 3104 lines, fixme
-	} else if (val == 60000000) {
-		// 60fps full resolution
-		// 25Mhz / 60Hz = 416666(0x065B9A)
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A5, 0x9A);
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A6, 0x5B);
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A7, 0x06);
-		priv->frame_length = 0x610; // 1552 lines, fixme
-	} else if (val == 90000000) {
-		// 90fps full resolution
-		// 25Mhz / 90Hz = 277777(0x043D11)
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A5, 0x11);
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A6, 0x3D);
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A7, 0x04);
-		priv->frame_length = 0x610; // 1552 lines, fixme
-	} else if (val == 120000000) {
-		// 120fps binning resolution
-		// 25Mhz / 120Hz = 208333(0x032DCD)
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A5, 0xCD);
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A6, 0x2D);
-		max96712_write_reg_Dser(0x94, priv->channel, 0x04A7, 0x03);
-		priv->frame_length = 0x308; // 776 lines, fixme
-	}
-#endif
 
 	return 0;
 }
@@ -703,18 +614,12 @@ static int ar0234_set_exposure(struct tegracam_device *tc_dev, s64 val)
 	u32 coarse_time;
 	u32 shs1;
 
-	// 90mhz * 4 = 360mhz
-	// row time = 2448pixel / 360mhz = 6.8us
-	// frame time = 1 / 30hz = 33.33ms
-	// frame time = 1 / 120hz = 8.33ms
-
 	if (priv->frame_length == 0)
 		priv->frame_length = AR0234_DEFAULT_FRAME_LENGTH;
 
-
-	coarse_time = mode->signal_properties.pixel_clock.val *
-		val / mode->image_properties.line_length /
-		mode->control_properties.exposure_factor;
+	coarse_time = mode->signal_properties.pixel_clock.val * val /
+		      mode->image_properties.line_length /
+		      mode->control_properties.exposure_factor;
 
 	if (coarse_time > priv->frame_length)
 		coarse_time = priv->frame_length;
@@ -723,200 +628,133 @@ static int ar0234_set_exposure(struct tegracam_device *tc_dev, s64 val)
 	if (shs1 < 2)
 		shs1 = 2;
 
-	dev_dbg(tc_dev->dev, "set_exposure: %d, %d", coarse_time, shs1);
-
 	ar0234_get_coarse_time_regs_shs1(reg_list, shs1);
-	err = ar0234_write_reg(priv->s_data, reg_list[0].addr,
-			reg_list[0].val);
+	err = ar0234_write_reg(priv->s_data, reg_list[0].addr, reg_list[0].val);
 	if (err)
 		goto fail;
 
 	return 0;
 
 fail:
-	dev_dbg(&priv->i2c_client->dev,
-			"%s: set coarse time error\n", __func__);
+	dev_dbg(&priv->i2c_client->dev, "%s: set coarse time error\n",
+		__func__);
 	return err;
 }
 
 static int ar0234_fill_string_ctrl(struct tegracam_device *tc_dev,
-		struct v4l2_ctrl *ctrl)
+				   struct v4l2_ctrl *ctrl)
 {
 	struct ar0234 *priv = tc_dev->priv;
 	int i, ret;
 
 	switch (ctrl->id) {
-		case TEGRA_CAMERA_CID_EEPROM_DATA:
-			for (i = 0; i < AR0234_EEPROM_SIZE; i++) {
-				ret = sprintf(&ctrl->p_new.p_char[i*2], "%02x",
-						priv->eeprom_buf[i]);
-				if (ret < 0)
-					return -EINVAL;
-			}
-			break;
-		default:
-			return -EINVAL;
+	case TEGRA_CAMERA_CID_EEPROM_DATA:
+		for (i = 0; i < AR0234_EEPROM_SIZE; i++) {
+			ret = sprintf(&ctrl->p_new.p_char[i * 2], "%02x",
+				      priv->eeprom_buf[i]);
+			if (ret < 0)
+				return -EINVAL;
+		}
+		break;
+	default:
+		return -EINVAL;
 	}
 	ctrl->p_cur.p_char = ctrl->p_new.p_char;
 
 	return 0;
 }
 
+#if 0
+static inline int isdigit(int c)
+{
+	return '0' <= c && c <= '9';
+}
+#endif
+
 static int ar0234_fill_eeprom(struct tegracam_device *tc_dev,
-				struct v4l2_ctrl *ctrl)
+			      struct v4l2_ctrl *ctrl)
 {
 	struct ar0234 *priv = tc_dev->priv;
 	LiEeprom_Content_Struct tmp;
 	u32 test = 0;
 
 	switch (ctrl->id) {
-		case TEGRA_CAMERA_CID_STEREO_EEPROM:
-			memset(&(priv->EepromCalib), 0, sizeof(NvCamSyncSensorCalibData));
-			memset(ctrl->p_new.p, 0, sizeof(NvCamSyncSensorCalibData));
-			memcpy(&tmp, priv->eeprom_buf, sizeof(LiEeprom_Content_Struct));
+	case TEGRA_CAMERA_CID_STEREO_EEPROM:
+		memset(&(priv->EepromCalib), 0,
+		       sizeof(NvCamSyncSensorCalibData));
+		memset(ctrl->p_new.p, 0, sizeof(NvCamSyncSensorCalibData));
+		memcpy(&tmp, priv->eeprom_buf, sizeof(LiEeprom_Content_Struct));
 
+		if (tmp.version == 1) {
 			if (priv->sync_sensor_index == 1) {
-				priv->EepromCalib.cam_intr =  tmp.left_cam_intr;
+				priv->EepromCalib.cam_intr = tmp.left_cam_intr;
 			} else if (priv->sync_sensor_index == 2) {
-				priv->EepromCalib.cam_intr =  tmp.right_cam_intr;
+				priv->EepromCalib.cam_intr = tmp.right_cam_intr;
 			} else {
-				priv->EepromCalib.cam_intr =  tmp.left_cam_intr;
+				priv->EepromCalib.cam_intr = tmp.left_cam_intr;
 			}
 			priv->EepromCalib.cam_extr = tmp.cam_extr;
 			priv->EepromCalib.imu_present = tmp.imu_present;
-			priv->EepromCalib.imu.imu_data_v1 = tmp.imu;
-			priv->EepromCalib.imu.nm = tmp.nm;
-			memcpy(priv->EepromCalib.serial_number, tmp.serial_number, 8);
-			if (priv->sync_sensor_index == 1)
-				priv->EepromCalib.rls = tmp.left_rls;
-			else if (priv->sync_sensor_index == 2)
-				priv->EepromCalib.rls = tmp.right_rls;
-			else
-				priv->EepromCalib.rls = tmp.left_rls;
+			//	priv->EepromCalib.imu = tmp.imu;
 
-			memcpy(ctrl->p_new.p, (u8 *)&(priv->EepromCalib), sizeof(NvCamSyncSensorCalibData));
-			break;
-		default:
-			return -EINVAL;
+			if (isdigit(tmp.serial_number[7]) &&
+			    isdigit(tmp.serial_number[6])) {
+				priv->EepromCalib.imu.imu_data_v1 = tmp.imu;
+				priv->EepromCalib.imu.nm = tmp.nm;
+				memcpy(priv->EepromCalib.serial_number,
+				       tmp.serial_number, 8);
+			} else {
+				memset(&(priv->EepromCalib.imu.imu_data_v1), 0,
+				       sizeof(priv->EepromCalib.imu
+						      .imu_data_v1));
+				memset(&(priv->EepromCalib.imu.nm), 0,
+				       sizeof(priv->EepromCalib.imu.nm));
+				memcpy(priv->EepromCalib.serial_number,
+				       "unknow", 6);
+			}
+
+			//	LEOP_CAMERA_MAX_SN_LENGTH);
+			memcpy(ctrl->p_new.p, (u8 *)&(priv->EepromCalib),
+			       sizeof(NvCamSyncSensorCalibData));
+		}
+		break;
+	default:
+		return -EINVAL;
 	}
 
 	memcpy(&test, &(priv->EepromCalib.cam_intr.fx), 4);
-
+	// dev_dbg(tc_dev->dev, "imu present = %d\n", priv->EepromCalib.imu_present);
+	if (priv->EepromCalib.imu_present != 1) {
+		dev_dbg(tc_dev->dev, "%s: fill eeprom error\n", __func__);
+	}
 	ctrl->p_cur.p = ctrl->p_new.p;
 
 	return 0;
 }
 
-static int ar0234_set_alternating_exposure(struct tegracam_device *tc_dev,
-	struct alternating_exposure_cfg *cfg)
-{
-	struct ar0234 *priv = (struct ar0234 *)tegracam_get_privdata(tc_dev);
-	struct camera_common_data *s_data = tc_dev->s_data;
-	const struct sensor_mode_properties *mode =
-		&s_data->sensor_props.sensor_modes[s_data->mode];
-	int err, ii;
-	const int num_contexts = 2;
-	u32 coarse_time_values[2];
-	u16 gain_reg_values[2];
-	u16 gain_values[2];
-
-	struct index_reg_8 table_alt_exp_enable[] = {
-		{0x06, AR0234_CTX_CONTROL_REG_ADDR, 0x0000}, // reset address pointer
-		// set 1 (1+1) contexts in bits 7-4, set MSB 0x3 of CIT register in bits 3-0
-		{0x06, AR0234_CTX_WR_DATA_REG_ADDR, 0xF813},
-		{0x06, AR0234_CTX_WR_DATA_REG_ADDR, 0x0809}, // set address x3012, CIT
-		{0x06, AR0234_CTX_WR_DATA_REG_ADDR, 0x0100}, // context 0 exposure time
-		{0x06, AR0234_CTX_WR_DATA_REG_ADDR, 0x0200}, // context 1 exposure time
-		// set 1 (1+1) contexts in bits 7-4, set MSB 0x3 of analog gain register in bits 3-0
-		{0x06, AR0234_CTX_WR_DATA_REG_ADDR, 0xF813},
-		{0x06, AR0234_CTX_WR_DATA_REG_ADDR, 0x0830}, // set address x3060, analog gain
-		{0x06, AR0234_CTX_WR_DATA_REG_ADDR, 0x0010}, // context 0 gain
-		{0x06, AR0234_CTX_WR_DATA_REG_ADDR, 0x0010}, // context 1 gain
-		{0x06, AR0234_CTX_WR_DATA_REG_ADDR, 0x0000}, // end of code
-
-		{0x06, AR0234_CTX_CONTROL_REG_ADDR, 0x0220}, // stop auto cycling
-		{0x06, AR0234_TABLE_WAIT_MS, 100},
-		{0x06, AR0234_CTX_CONTROL_REG_ADDR, 0x02A0}, // start auto cycling two contexts
-
-		{0x00, AR0234_TABLE_END, 0x00},
-	};
-
-	struct index_reg_8 table_alt_exp_disable[] = {
-		{0x06, AR0234_CTX_CONTROL_REG_ADDR, 0x0000}, // reset address pointer
-		{0x06, AR0234_CTX_CONTROL_REG_ADDR, 0x0220}, // stop auto cycling
-		{0x06, AR0234_TABLE_WAIT_MS, 100},
-
-		{0x00, AR0234_TABLE_END, 0x00},
-	};
-
-	if (priv->frame_length == 0)
-		priv->frame_length = AR0234_DEFAULT_FRAME_LENGTH;
-
-	coarse_time_values[0] = mode->signal_properties.pixel_clock.val *
-		cfg->exp_time_0 / mode->image_properties.line_length /
-		mode->control_properties.exposure_factor;
-	coarse_time_values[1] = mode->signal_properties.pixel_clock.val *
-		cfg->exp_time_1 / mode->image_properties.line_length /
-		mode->control_properties.exposure_factor;
-
-	/* 0 and 1 are prohibited */
-	for (ii = 0; ii < num_contexts; ii++)
-		if (coarse_time_values[ii] < 2)
-			coarse_time_values[ii] = 2;
-
-	gain_values[0] = (u16)(cfg->analog_gain_0);
-	gain_values[1] = (u16)(cfg->analog_gain_1);
-	for (ii = 0; ii < 2; ii++)
-		gain_reg_values[ii] = 0;
-
-	ar0234_compute_gain_reg(&gain_reg_values[0], &gain_values[0], cfg->analog_gain_0);
-	ar0234_compute_gain_reg(&gain_reg_values[1], &gain_values[1], cfg->analog_gain_1);
-
-	table_alt_exp_enable[3].val = coarse_time_values[0] & 0xffff;
-	table_alt_exp_enable[4].val = coarse_time_values[1] & 0xffff;
-	table_alt_exp_enable[7].val = gain_reg_values[0] & 0xffff;
-	table_alt_exp_enable[8].val = gain_reg_values[1] & 0xffff;
-
-	if (cfg->enable == false)
-		err = ar0234_write_table(priv, table_alt_exp_disable);
-	else
-		err = ar0234_write_table(priv, table_alt_exp_enable);
-	if (err)
-		goto fail;
-
-	return 0;
-
-fail:
-	dev_dbg(&priv->i2c_client->dev,
-			"%s: set alternating exposure error\n", __func__);
-	return err;
-}
-
 static struct tegracam_ctrl_ops ar0234_ctrl_ops = {
 	.numctrls = ARRAY_SIZE(ctrl_cid_list),
 	.ctrl_cid_list = ctrl_cid_list,
-	.string_ctrl_size = {AR0234_EEPROM_STR_SIZE},
-	.compound_ctrl_size = {sizeof(NvCamSyncSensorCalibData), alternating_exposure_cfg_size},
+	.string_ctrl_size = { AR0234_EEPROM_STR_SIZE },
+	.compound_ctrl_size = { sizeof(NvCamSyncSensorCalibData) },
 	.set_gain = ar0234_set_gain,
 	.set_exposure = ar0234_set_exposure,
 	.set_exposure_short = ar0234_set_exposure,
 	.set_frame_rate = ar0234_set_frame_rate,
 	.set_group_hold = ar0234_set_group_hold,
-	.set_alternating_exposure = ar0234_set_alternating_exposure,
 	.fill_string_ctrl = ar0234_fill_string_ctrl,
 	.fill_compound_ctrl = ar0234_fill_eeprom,
 };
 
-static struct camera_common_pdata *ar0234_parse_dt(struct tegracam_device *tc_dev)
+static struct camera_common_pdata *
+ar0234_parse_dt(struct tegracam_device *tc_dev)
 {
 	struct device *dev = tc_dev->dev;
 	struct device_node *node = dev->of_node;
 	struct camera_common_pdata *board_priv_pdata;
 	const struct of_device_id *match;
-#if 0
 	int err;
-	int gpio = 0;
-#endif
+	// int gpio = 0;
 
 	if (!node)
 		return NULL;
@@ -927,29 +765,29 @@ static struct camera_common_pdata *ar0234_parse_dt(struct tegracam_device *tc_de
 		return NULL;
 	}
 
-	board_priv_pdata = devm_kzalloc(dev, sizeof(*board_priv_pdata), GFP_KERNEL);
+	board_priv_pdata =
+		devm_kzalloc(dev, sizeof(*board_priv_pdata), GFP_KERNEL);
 
-#if 0
-	err = of_property_read_string(node, "mclk", &board_priv_pdata->mclk_name);
+	err = of_property_read_string(node, "mclk",
+				      &board_priv_pdata->mclk_name);
 	if (err)
 		dev_err(dev, "mclk not in DT\n");
 
-	board_priv_pdata->reset_gpio = of_get_named_gpio(node, "reset-gpios", 0);
-	gpio_direction_output(board_priv_pdata->reset_gpio, 1);
+	// board_priv_pdata->reset_gpio = of_get_named_gpio(node,
+	// 		"reset-gpios", 0);
+	// gpio_direction_output(board_priv_pdata->reset_gpio, 1);
 
-	gpio = of_get_named_gpio(node, "pwdn-gpios", 0);
-	gpio_direction_output(gpio, 1);
+	// gpio = of_get_named_gpio(node,
+	// 		"pwdn-gpios", 0);
 
-	gpio = of_get_named_gpio(node, "pwr-gpios", 0);
-	gpio_direction_output(gpio, 1);
-#else
-	board_priv_pdata->mclk_name = 0;
-	board_priv_pdata->parentclk_name = 0;
-	board_priv_pdata->pwdn_gpio = 0;
-	board_priv_pdata->reset_gpio = 0;
-#endif
+	// gpio_direction_output(gpio, 1);
+	// gpio = of_get_named_gpio(node,
+	// 		"pwr-gpios", 0);
 
-	board_priv_pdata->has_eeprom = of_property_read_bool(node, "has-eeprom");
+	// gpio_direction_output(gpio, 1);
+
+	board_priv_pdata->has_eeprom =
+		of_property_read_bool(node, "has-eeprom");
 	return board_priv_pdata;
 }
 
@@ -973,7 +811,7 @@ static int ar0234_set_mode(struct tegracam_device *tc_dev)
 
 	if (s_data->mode_prop_idx < 0)
 		return -EINVAL;
-	dev_dbg(dev, "%s: mode index:%d\n", __func__,s_data->mode_prop_idx);
+	dev_dbg(dev, "%s: mode index:%d\n", __func__, s_data->mode_prop_idx);
 	err = ar0234_write_table(priv, mode_table[s_data->mode_prop_idx]);
 	if (err)
 		return err;
@@ -988,27 +826,22 @@ static int ar0234_start_streaming(struct tegracam_device *tc_dev)
 
 	if (test_mode) {
 		err = ar0234_write_table(priv,
-				mode_table[AR0234_MODE_TEST_PATTERN]);
+					 mode_table[AR0234_MODE_TEST_PATTERN]);
 		if (err)
 			return err;
 	}
-
-	dev_dbg(tc_dev->dev, "start streaming\n");
 
 	err = ar0234_write_table(priv, mode_table[AR0234_MODE_START_STREAM]);
 	if (err)
 		return err;
 
 	return 0;
-
 }
 
 static int ar0234_stop_streaming(struct tegracam_device *tc_dev)
 {
 	struct ar0234 *priv = (struct ar0234 *)tegracam_get_privdata(tc_dev);
 	int err;
-
-	dev_dbg(tc_dev->dev, "stop streaming\n");
 
 	err = ar0234_write_table(priv, mode_table[AR0234_MODE_STOP_STREAM]);
 	if (err)
@@ -1057,15 +890,12 @@ static const struct v4l2_subdev_internal_ops ar0234_subdev_internal_ops = {
 	.open = ar0234_open,
 };
 
-
 static int ar0234_eeprom_device_init(struct ar0234 *priv)
 {
-	struct camera_common_pdata *pdata =  priv->s_data->pdata;
+	struct camera_common_pdata *pdata = priv->s_data->pdata;
 	char *dev_name = "eeprom_ar0234";
-	static struct regmap_config eeprom_regmap_config = {
-		.reg_bits = 8,
-		.val_bits = 8
-	};
+	static struct regmap_config eeprom_regmap_config = { .reg_bits = 8,
+							     .val_bits = 8 };
 	int i;
 	int err;
 
@@ -1073,11 +903,11 @@ static int ar0234_eeprom_device_init(struct ar0234 *priv)
 		return -EINVAL;
 
 	for (i = 0; i < AR0234_EEPROM_NUM_BLOCKS; i++) {
-		priv->eeprom[i].adap = i2c_get_adapter(
-				priv->i2c_client->adapter->nr);
+		priv->eeprom[i].adap =
+			i2c_get_adapter(priv->i2c_client->adapter->nr);
 		memset(&priv->eeprom[i].brd, 0, sizeof(priv->eeprom[i].brd));
 		strncpy(priv->eeprom[i].brd.type, dev_name,
-				sizeof(priv->eeprom[i].brd.type));
+			sizeof(priv->eeprom[i].brd.type));
 
 		if (priv->sync_sensor_index == 1)
 			priv->eeprom[i].brd.addr = AR0234_EEPROM_ADDRESS + i;
@@ -1086,13 +916,13 @@ static int ar0234_eeprom_device_init(struct ar0234 *priv)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
 		priv->eeprom[i].i2c_client = i2c_new_device(
-				priv->eeprom[i].adap, &priv->eeprom[i].brd);
+			priv->eeprom[i].adap, &priv->eeprom[i].brd);
 #else
 		priv->eeprom[i].i2c_client = i2c_new_client_device(
-				priv->eeprom[i].adap, &priv->eeprom[i].brd);
+			priv->eeprom[i].adap, &priv->eeprom[i].brd);
 #endif
 		priv->eeprom[i].regmap = devm_regmap_init_i2c(
-				priv->eeprom[i].i2c_client, &eeprom_regmap_config);
+			priv->eeprom[i].i2c_client, &eeprom_regmap_config);
 		if (IS_ERR(priv->eeprom[i].regmap)) {
 			err = PTR_ERR(priv->eeprom[i].regmap);
 			ar0234_eeprom_device_release(priv);
@@ -1108,9 +938,10 @@ static int ar0234_read_eeprom(struct ar0234 *priv)
 	int err, i;
 
 	for (i = 0; i < AR0234_EEPROM_NUM_BLOCKS; i++) {
-		err = regmap_bulk_read(priv->eeprom[i].regmap, 0,
-				&priv->eeprom_buf[i * AR0234_EEPROM_BLOCK_SIZE],
-				AR0234_EEPROM_BLOCK_SIZE);
+		err = regmap_bulk_read(
+			priv->eeprom[i].regmap, 0,
+			&priv->eeprom_buf[i * AR0234_EEPROM_BLOCK_SIZE],
+			AR0234_EEPROM_BLOCK_SIZE);
 		if (err)
 			return err;
 	}
@@ -1130,28 +961,24 @@ static int ar0234_board_setup(struct ar0234 *priv)
 	/* eeprom interface */
 	err = ar0234_eeprom_device_init(priv);
 	if (err && s_data->pdata->has_eeprom)
-		dev_err(dev,
-				"Failed to allocate eeprom reg map: %d\n", err);
+		dev_err(dev, "Failed to allocate eeprom reg map: %d\n", err);
 	eeprom_ctrl = !err;
 
 	err = camera_common_mclk_enable(s_data);
 	if (err) {
-		dev_err(dev,
-				"Error %d turning on mclk\n", err);
+		dev_err(dev, "Error %d turning on mclk\n", err);
 		return err;
 	}
 
 	err = ar0234_power_on(s_data);
 	if (err) {
-		dev_err(dev,
-				"Error %d during power on sensor\n", err);
+		dev_err(dev, "Error %d during power on sensor\n", err);
 		return err;
 	}
 	if (eeprom_ctrl) {
 		err = ar0234_read_eeprom(priv);
 		if (err) {
-			dev_err(dev,
-					"Error %d reading eeprom\n", err);
+			dev_err(dev, "Error %d reading eeprom\n", err);
 			goto error;
 		}
 	}
@@ -1162,10 +989,8 @@ error:
 	return err;
 }
 
-
-
 static int ar0234_probe(struct i2c_client *client,
-		const struct i2c_device_id *id)
+			const struct i2c_device_id *id)
 {
 	struct device *dev = &client->dev;
 	struct device_node *node = dev->of_node;
@@ -1184,8 +1009,7 @@ static int ar0234_probe(struct i2c_client *client,
 		dev_err(dev, "unable to allocate memory!\n");
 		return -ENOMEM;
 	}
-	tc_dev = devm_kzalloc(dev,
-			sizeof(struct tegracam_device), GFP_KERNEL);
+	tc_dev = devm_kzalloc(dev, sizeof(struct tegracam_device), GFP_KERNEL);
 	if (!tc_dev)
 		return -ENOMEM;
 
@@ -1195,16 +1019,14 @@ static int ar0234_probe(struct i2c_client *client,
 	priv->channel = str[0] - 'a';
 	dev_dbg(dev, "%s: channel %d\n", __func__, priv->channel);
 
-
 	err = of_property_read_u32(node, "sync_sensor_index",
-			&priv->sync_sensor_index);
+				   &priv->sync_sensor_index);
 	if (err)
-		 dev_err(dev, "sync name index not in DT\n");
+		dev_err(dev, "sync name index not in DT\n");
 
 	priv->i2c_client = tc_dev->client = client;
 	tc_dev->dev = dev;
-	// strncpy(tc_dev->name, "ar0234", sizeof(tc_dev->name));
-	snprintf(tc_dev->name, sizeof(tc_dev->name), "ar0234.%d", priv->sync_sensor_index - 1);
+	strncpy(tc_dev->name, "ar0234", sizeof(tc_dev->name));
 	tc_dev->dev_regmap_config = &sensor_regmap_config;
 	tc_dev->sensor_ops = &ar0234_common_ops;
 	tc_dev->v4l2sd_internal_ops = &ar0234_subdev_internal_ops;
@@ -1223,37 +1045,42 @@ static int ar0234_probe(struct i2c_client *client,
 	ar0234_power_on(tc_dev->s_data);
 	msleep(100);
 
-	if (ar0234_hawk_link_check(priv) == 2) {
-		err = ar0234_write_table(priv, mode_table[AR0234_MODE_Double_Dser_Ser]);
+	if (priv->channel == CHANNEL_A) {
+		err = ar0234_write_table(priv,
+					 mode_table[AR0234_MODE_Dser_Ser]);
 		if (err) {
-			dev_info(&client->dev,"dual camera detect error\n");
+			dev_info(&client->dev, "dual camera detect error\n");
 			return err;
 		} else {
-			dev_info(&client->dev,"dual camera detect success\n");
+			dev_info(&client->dev, "dual camera detect success\n");
 		}
-	} else if (ar0234_hawk_link_check(priv) == 1) {
-		err = ar0234_write_table(priv, mode_table[AR0234_MODE_Single_Dser_Ser]);
-		if (err) {
-			dev_info(&client->dev,"single detect error\n");
-			return err;
-		} else {
-			dev_info(&client->dev,"single detect success\n");
-		}
-	} else if (ar0234_hawk_link_check(priv) == 3) {
-		;
-	} else {
-		return -1;
 	}
-
-	err = ar0234_write_table(priv, mode_table[AR0234_MODE_START_STREAM]);
-	if (err) {
-		dev_info(&client->dev,"ar0234 pre-start error\n");
-		return err;
-	}
-
+	// #if 0
+	// if (ar0234_hawk_link_check(priv) == 2) {
+	// 	err = ar0234_write_table(priv, mode_table[AR0234_MODE_Dser_Ser]);
+	// 	if (err) {
+	// 		dev_info(&client->dev,"dual camera detect error\n");
+	// 		return err;
+	// 	} else {
+	// 		dev_info(&client->dev,"dual camera detect success\n");
+	// 	}
+	// } else if (ar0234_hawk_link_check(priv) == 1) {
+	// 	err = ar0234_write_table(priv, mode_table[AR0234_MODE_Single_Dser_Ser]);
+	// 	if (err) {
+	// 		dev_info(&client->dev,"single detect error\n");
+	// 		return err;
+	// 	} else {
+	// 		dev_info(&client->dev,"single detect success\n");
+	// 	}
+	// } else if (ar0234_hawk_link_check(priv) == 3) {
+	// 	;
+	// } else {
+	// 	return -1;
+	// }
+	// #endif
 	err = ar0234_write_table(priv, mode_table[AR0234_MODE_STOP_STREAM]);
 	if (err) {
-		dev_info(&client->dev,"ar0234 pre-stop error\n");
+		dev_info(&client->dev, "ar0234 detect error\n");
 		return err;
 	}
 
@@ -1287,10 +1114,7 @@ static int ar0234_remove(struct i2c_client *client)
 	return 0;
 }
 
-static const struct i2c_device_id ar0234_id[] = {
-	{ "ar0234", 0 },
-	{ }
-};
+static const struct i2c_device_id ar0234_id[] = { { "ar0234", 0 }, {} };
 
 MODULE_DEVICE_TABLE(i2c, ar0234_id);
 
@@ -1309,5 +1133,5 @@ module_i2c_driver(ar0234_i2c_driver);
 
 MODULE_DESCRIPTION("Media Controller driver for Sony AR0234");
 MODULE_AUTHOR("NVIDIA Corporation");
-MODULE_AUTHOR("Sudhir Vyas <svyas@nvidia.com>");
+MODULE_AUTHOR("Sudhir Vyas <svyas@nvidia.com");
 MODULE_LICENSE("GPL v2");
