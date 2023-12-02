@@ -28,6 +28,8 @@
 
 #define CAM_I2C_MUX TEGRA234_MAIN_GPIO(H, 6)  // cam0_mclk occupied
 
+#define	CAM_PWDN TEGRA234_MAIN_GPIO(P, 0)
+
 /* camera control gpio definitions */
 
 / {
@@ -48,6 +50,7 @@
 					compatible = "nvidia,max96712";
 					reg = <0x62>;
 					channel = "a";
+					pwdn-gpios = <&tegra_main_gpio CAM_PWDN GPIO_ACTIVE_HIGH>;
 			};
 
 			bmi088_a@69 {
