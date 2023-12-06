@@ -119,7 +119,7 @@ static int get_gpio(int gpio_number, const char *name, int direction)
 	int rc = 0;
 
 	if (gpio_number == -1) {
-		pr_err("%s(%d) : gpio is required\n", __func__, __LINE__);
+		pr_info("%s(%d) : gpio is required\n", __func__, __LINE__);
 		rc = -ENODEV;
 		goto no_gpio;
 	}
@@ -127,7 +127,7 @@ static int get_gpio(int gpio_number, const char *name, int direction)
 	pr_debug("request gpio_number %d", gpio_number);
 	rc = gpio_request(gpio_number, name);
 	if (rc) {
-		pr_err("fail to acquire gpio(%d), error = %d", gpio_number, rc);
+		pr_info("fail to acquire gpio(%d), error = %d", gpio_number, rc);
 		goto request_failed;
 	}
 
@@ -135,7 +135,7 @@ static int get_gpio(int gpio_number, const char *name, int direction)
 	{
 		rc = gpio_direction_output(gpio_number, 0);
 		if (rc) {
-			pr_err("fail to configure gpio_number(%d) as output %d", gpio_number, rc);
+			pr_info("fail to configure gpio_number(%d) as output %d", gpio_number, rc);
 			goto direction_failed;
 		}
 	}
@@ -143,7 +143,7 @@ static int get_gpio(int gpio_number, const char *name, int direction)
 	{
 		rc = gpio_direction_input(gpio_number);
 		if (rc) {
-			pr_err("fail to configure gpio_number(%d) as input %d", gpio_number, rc);
+			pr_info("fail to configure gpio_number(%d) as input %d", gpio_number, rc);
 			goto direction_failed;
 		}
 	}
@@ -180,7 +180,7 @@ static int stmvl53l5cx_release(struct inode *inode, struct file *file)
 /* Interrupt handler */
 static irqreturn_t st_tof_intr_handler(int st_tof_irq_num, void *dev_id)
 {
-	pr_err("enter interrupt handler\n");
+	pr_info("enter interrupt handler\n");
 	/* Update interrupt flag */
 	atomic_set(&intr_ready_flag, 1);
 
@@ -225,7 +225,7 @@ static long stmvl53l5cx_ioctl(struct file *file,
 
 			ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
 			if (ret) {
-				pr_err("Error at %s(%d)\n", __func__, __LINE__);
+				pr_info("Error at %s(%d)\n", __func__, __LINE__);
 				return -EINVAL;
 			}
 
@@ -262,7 +262,7 @@ static long stmvl53l5cx_ioctl(struct file *file,
 
 					ret = copy_from_user(&raw_data_buffer[2], comms_struct.buf + index, transfer_size);
 					if (ret) {
-						pr_err("Error at %s(%d)\n", __func__, __LINE__);
+						pr_info("Error at %s(%d)\n", __func__, __LINE__);
 						return -EINVAL;
 					}
 
@@ -270,7 +270,7 @@ static long stmvl53l5cx_ioctl(struct file *file,
 					st_i2c_message.flags = 0;
 					ret = i2c_transfer(stmvl53l5cx_i2c_client->adapter, &st_i2c_message, 1);
 					if (ret != 1) {
-						pr_err("Error %d at %s(%d)\n",ret,  __func__, __LINE__);
+						pr_info("Error %d at %s(%d)\n",ret,  __func__, __LINE__);
 						return -EIO;
 					}
 				}
@@ -284,7 +284,7 @@ static long stmvl53l5cx_ioctl(struct file *file,
 
 					ret = i2c_transfer(stmvl53l5cx_i2c_client->adapter, &st_i2c_message, 1);
 					if (ret != 1) {
-						pr_err("Error at %s(%d)\n", __func__, __LINE__);
+						pr_info("Error at %s(%d)\n", __func__, __LINE__);
 						return -EIO;
 					}
 
@@ -293,7 +293,7 @@ static long stmvl53l5cx_ioctl(struct file *file,
 
 					ret = i2c_transfer(stmvl53l5cx_i2c_client->adapter, &st_i2c_message, 1);
 					if (ret != 1) {
-						pr_err("Error at %s(%d)\n", __func__, __LINE__);
+						pr_info("Error at %s(%d)\n", __func__, __LINE__);
 						return -EIO;
 					}
 
@@ -301,7 +301,7 @@ static long stmvl53l5cx_ioctl(struct file *file,
 					ret = copy_to_user(data_ptr + index, raw_data_buffer, transfer_size);
 
 					if (ret) {
-						pr_err("Error at %s(%d)\n", __func__, __LINE__);
+						pr_info("Error at %s(%d)\n", __func__, __LINE__);
 						return -EINVAL;
 					}
 
@@ -354,7 +354,7 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 	{
 		ret = get_gpio(intr_gpio_nb, "intr_gpio_nb", 0);
 		if (ret != 0) {
-			pr_err("Failed to acquire INTR GPIO(%d)\n", intr_gpio_nb);
+			pr_info("Failed to acquire INTR GPIO(%d)\n", intr_gpio_nb);
 		} else {
 			gpio_own_flags.intr_gpio_owned = 1;
 
@@ -370,7 +370,7 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 						NULL);
 
 			if (ret) {
-				pr_err("stmvl53l5cx: Failed to Register IRQ handler,"
+				pr_info("stmvl53l5cx: Failed to Register IRQ handler,"
 				       " GPIO = %d, st_tof_irq_num = %d\n",
 				       intr_gpio_nb, st_tof_irq_num);
 				kfree(raw_data_buffer);
@@ -390,7 +390,7 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 	{
 		ret = get_gpio(power_gpio, "power_gpio", 1);
 		if (ret != 0) {
-			pr_err("Failed to acquire power GPIO(%d)\n", power_gpio);
+			pr_info("Failed to acquire power GPIO(%d)\n", power_gpio);
 		} else {
 			gpio_set_value(power_gpio, 1);
 		}
@@ -400,7 +400,7 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 	{
 		ret = get_gpio(rst_gpio, "rst_gpio", 1);
 		if (ret != 0) {
-			pr_err("Failed to acquire rst GPIO(%d)\n", rst_gpio);
+			pr_info("Failed to acquire rst GPIO(%d)\n", rst_gpio);
 		} else {
 			gpio_set_value(rst_gpio, 0);
 		}
@@ -410,7 +410,7 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 	{
 		ret = get_gpio(lpn_gpio, "lpn_gpio", 1);
 		if (ret != 0) {
-			pr_err("Failed to acquire lpn GPIO(%d)\n", lpn_gpio);
+			pr_info("Failed to acquire lpn GPIO(%d)\n", lpn_gpio);
 		} else {
 			gpio_set_value(lpn_gpio, 1);
 		}
@@ -421,7 +421,7 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 	ret |= stmvl53l5cx_read_multi(client, raw_data_buffer, 0x01, &revision_id, 1);
 
 	if ((device_id != 0xF0) || (revision_id != 0x02)) {
-		pr_err("stmvl53l5cx: Error. Could not read device and revision id registers\n");
+		pr_info("stmvl53l5cx: Error. Could not read device and revision id registers\n");
 		return ret;
 	}
 	printk("stmvl53l5cx: device_id : 0x%x. revision_id : 0x%x\n", device_id, revision_id);
@@ -433,7 +433,7 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 
 	ret = misc_register(&st_tof_miscdev);
 	if (ret) {
-		pr_err("stmvl53l5cx : Failed to create misc device, err = %d\n", ret);
+		pr_info("stmvl53l5cx : Failed to create misc device, err = %d\n", ret);
 		return -1;
 	}
 
@@ -455,6 +455,7 @@ static struct i2c_driver stmvl53l5cx_i2c_driver = {
 		.name = STMVL53L5_DRV_NAME,
 		.owner = THIS_MODULE,
 		.of_match_table = of_match_ptr(st_tof_of_match), // for platform register to pick up the dts info
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.probe = stmvl53l5cx_probe,
 	.remove = stmvl53l5cx_remove,

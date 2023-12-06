@@ -113,7 +113,7 @@ static int tegra_machine_respeaker_init(struct snd_soc_pcm_runtime *rtd)
 static int tegra_machine_tas5805m_init(struct snd_soc_pcm_runtime *rtd)
 {
 	struct device *dev = rtd->card->dev;
-	dev_err(dev,"tegra_machine_tas5805m_init");
+	dev_info(dev,"tegra_machine_tas5805m_init");
 
 	return tegra_audio_dai_init(rtd);
 }

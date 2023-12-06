@@ -307,6 +307,7 @@ static struct i2c_driver max96712_i2c_driver = {
 	.driver = {
 		.name = "max96712",
 		.owner = THIS_MODULE,
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.probe = max96712_probe,
 	.remove = max96712_remove,

@@ -28,5 +28,5 @@
 	nvidia,dtsfilename = __FILE__;
 	nvidia,dtbbuildtime = __DATE__, __TIME__;
 	compatible = "nvidia,p3509-0000+p3767-0000", "nvidia,p3767-0000", "nvidia,tegra234", "nvidia,tegra23x";
-	model = "Cerebrum_of_TITA";
+	model = "DirectDrive Cerebrum_of_TITA";
 };
