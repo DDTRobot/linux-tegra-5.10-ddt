@@ -58,7 +58,6 @@ struct mrq_emc_dvfs_latency_response bwmgr_emc_dvfs;
 #define IS_BWMGR_SUPPORTED(x, err)			\
 do {							\
 	if (x) {					\
-		pr_err("bwmgr API not supported");	\
 		return (err);				\
 	}						\
 } while (0)
@@ -378,7 +377,7 @@ EXPORT_SYMBOL_GPL(tegra_bwmgr_register);
 void tegra_bwmgr_unregister(struct tegra_bwmgr_client *handle)
 {
 	if (bwmgr_disable) {
-		pr_err("bwmgr API not supported");
+		// pr_err("bwmgr API not supported");
 		return;
 	}
 

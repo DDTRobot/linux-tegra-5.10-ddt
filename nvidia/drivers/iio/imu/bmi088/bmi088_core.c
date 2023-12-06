@@ -460,7 +460,7 @@ static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
             dev_err(&st->i2c->dev, "ERR: read chip id failed\n");
 			return ret;
 		} else {
-            dev_err(&st->i2c->dev, "read chip id success\n");
+            dev_info(&st->i2c->dev, "read chip id success\n");
             ret  = 0;
         }
 			
@@ -472,8 +472,8 @@ static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
         bmi08x_accel_spec = val32;
     else
         return -ENODEV;
-    dev_err(&st->i2c->dev, "bmi08x_gyro_spec: %x\n", bmi08x_gyro_spec);
-    dev_err(&st->i2c->dev, "bmi08x_accel_spec: %x\n", bmi08x_accel_spec);
+    dev_info(&st->i2c->dev, "bmi08x_gyro_spec: %x\n", bmi08x_gyro_spec);
+    dev_info(&st->i2c->dev, "bmi08x_accel_spec: %x\n", bmi08x_accel_spec);
 
 	ret = devm_add_action_or_reset(&client->dev, bmi_remove, client);
 	if (ret)
@@ -486,13 +486,13 @@ static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
     ret = misc_register(&bmi_imu_miscdev);
 	if (ret) {
-		pr_err("stmvl53l5cx : Failed to create misc device, err = %d\n", ret);
+		pr_err("bmi088: Failed to create misc device, err = %d\n", ret);
 		return -1;
 	}
 
 	misc_registered = 1;
 
-	dev_err(&client->dev, "done\n");
+	dev_info(&client->dev, "done\n");
 
 	return ret;
 }
@@ -518,6 +518,7 @@ static struct i2c_driver bmi_driver = {
 		.name			= BMI_NAME,
 		.owner			= THIS_MODULE,
 		.of_match_table		= of_match_ptr(bmi_of_match),
+        .probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.id_table			= bmi_i2c_device_ids,
 };

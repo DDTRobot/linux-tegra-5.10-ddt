@@ -490,7 +490,7 @@ static int tas5805m_i2c_probe(struct i2c_client *i2c, const struct i2c_device_id
 	struct tas5805m_priv *priv;
 	struct device *dev = &i2c->dev;
 	struct device_node *np = i2c->dev.of_node;
-	dev_err(&i2c->dev, "probe success\n");
+	dev_info(&i2c->dev, "probe success\n");
 
 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
 	if (!priv)
@@ -498,7 +498,7 @@ static int tas5805m_i2c_probe(struct i2c_client *i2c, const struct i2c_device_id
 		dev_err(&i2c->dev, "tas5805m devm_kzalloc fail\n");
 		return -ENOMEM;
 	}
-	dev_err(&i2c->dev, "tas5805m devm_kzalloc success.\n");
+	dev_info(&i2c->dev, "tas5805m devm_kzalloc success.\n");
 
 
 	
@@ -512,7 +512,7 @@ static int tas5805m_i2c_probe(struct i2c_client *i2c, const struct i2c_device_id
 	if (IS_ERR(regmap))
 		return PTR_ERR(regmap);
 
-	dev_err(&i2c->dev, "I2C probe success\n");
+	dev_info(&i2c->dev, "I2C probe success\n");
 	return tas5805m_probe(&i2c->dev, regmap);
 }
 
@@ -552,6 +552,7 @@ static struct i2c_driver tas5805m_i2c_driver = {
 		.name	= TAS5805M_DRV_NAME,
 		.owner	= THIS_MODULE,
 		.of_match_table = of_match_ptr(tas5805m_of_match),
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.probe 		= tas5805m_i2c_probe,
 	.remove 	= tas5805m_i2c_remove,

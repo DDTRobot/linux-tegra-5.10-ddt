@@ -154,7 +154,7 @@ int chbsp_i2c_write(ch_dev_t * dev_ptr, uint8_t * data, uint16_t n)
 	if (ret == 1) {
 		ret = 0;
 	} else {
-		dev_err(&ch201_data->i2c->dev, " ch201 w err\n");
+		dev_info(&ch201_data->i2c->dev, " ch201 w err\n");
 		ret = -EIO;
 	}
 
@@ -196,7 +196,7 @@ int chbsp_i2c_mem_write(ch_dev_t * dev_ptr, uint16_t mem_addr,
 	{
 		ret = 0;
 	} else {
-		dev_err(&ch201_data->i2c->dev, " ch201 w16 err\n");
+		dev_info(&ch201_data->i2c->dev, " ch201 w16 err\n");
 		ret = -EIO;
 	}
 
@@ -237,7 +237,7 @@ int chbsp_i2c_read(ch_dev_t * dev_ptr, uint8_t * data, uint16_t len)
 	if (ret == 1) {
 		ret = 0;
 	} else {
-		dev_err(&ch201_data->i2c->dev, " ch201 r err\n");
+		dev_info(&ch201_data->i2c->dev, " ch201 r err\n");
 		ret = -EIO;
 	}
 
@@ -273,7 +273,7 @@ int chbsp_i2c_mem_read(ch_dev_t * dev_ptr, uint16_t mem_addr,
 	{
 		ret = 0;
 	} else {
-		dev_err(&ch201_data->i2c->dev, " ch201 r16-w err\n");
+		dev_info(&ch201_data->i2c->dev, " ch201 r16-w err\n");
 		ret = -EIO;
 	}
 		
@@ -287,7 +287,7 @@ int chbsp_i2c_mem_read(ch_dev_t * dev_ptr, uint16_t mem_addr,
 	{
 		ret = 0;
 	} else {
-		dev_err(&ch201_data->i2c->dev, " ch201 r16-r err\n");
+		dev_info(&ch201_data->i2c->dev, " ch201 r16-r err\n");
 		ret = -EIO;
 	}
 
@@ -350,9 +350,9 @@ void chbsp_reset_assert(void)
         gpio_set_value(ch201_data->i2c_rst_gpio, 0);
 		if(gpio_get_value(ch201_data->i2c_rst_gpio) != 0)
 		{
-			dev_err(&ch201_data->i2c->dev, "ch201 rst low err.");
+			dev_info(&ch201_data->i2c->dev, "ch201 rst low err.");
 		} else {
-			dev_err(&ch201_data->i2c->dev, "ch201 rst low success.");
+			dev_info(&ch201_data->i2c->dev, "ch201 rst low success.");
 		}
 	}
 }
@@ -368,9 +368,9 @@ void chbsp_reset_release(void)
         gpio_set_value(ch201_data->i2c_rst_gpio, 1);
 		if(gpio_get_value(ch201_data->i2c_rst_gpio) != 1)
 		{
-			dev_err(&ch201_data->i2c->dev, "ch201 reset high err.");
+			dev_info(&ch201_data->i2c->dev, "ch201 reset high err.");
 		} else {
-			dev_err(&ch201_data->i2c->dev, "ch201 reset high success.");
+			dev_info(&ch201_data->i2c->dev, "ch201 reset high success.");
 		}
 	}
 }
@@ -386,9 +386,9 @@ void chbsp_program_enable(ch_dev_t * dev_ptr)
         gpio_set_value(ch201_data->prog_gpio, 1);
 		if(gpio_get_value(ch201_data->prog_gpio) != 1)
 		{
-			dev_err(&ch201_data->i2c->dev, "ch201 prog high err.");
+			dev_info(&ch201_data->i2c->dev, "ch201 prog high err.");
 		} else {
-			//dev_err(&ch201_data->i2c->dev, "ch201 prog high success.");
+			//dev_info(&ch201_data->i2c->dev, "ch201 prog high success.");
 		}
 	}
 }
@@ -404,9 +404,9 @@ void chbsp_program_disable(ch_dev_t * dev_ptr)
         gpio_set_value(ch201_data->prog_gpio, 0);
 		if(gpio_get_value(ch201_data->prog_gpio) != 0)
 		{
-			dev_err(&ch201_data->i2c->dev, "ch201 prog low err.");
+			dev_info(&ch201_data->i2c->dev, "ch201 prog low err.");
 		} else {
-			//dev_err(&ch201_data->i2c->dev, "ch201 prog low success.");
+			//dev_info(&ch201_data->i2c->dev, "ch201 prog low success.");
 		}
 	}
 }
@@ -423,7 +423,7 @@ void chbsp_group_set_io_dir_out(ch_group_t * grp_ptr)
 	if (ch201_data->irq_gpio >= 0) {
 		ret = gpio_direction_output(ch201_data->irq_gpio, 0);
 		if (ret < 0) {
-			dev_err(&ch201_data->i2c->dev,
+			dev_info(&ch201_data->i2c->dev,
 				"%s gpio_dir_inp(%d) ERR:%d\n",
 				__func__, ch201_data->irq_gpio, ret);
 		}
@@ -437,7 +437,7 @@ void chbsp_set_io_dir_out(ch_dev_t * dev_ptr)
 	if (ch201_data->irq_gpio >= 0) {
 		ret = gpio_direction_output(ch201_data->irq_gpio, 0);
 		if (ret < 0) {
-			dev_err(&ch201_data->i2c->dev,
+			dev_info(&ch201_data->i2c->dev,
 				"%s gpio_dir_outp(%d) ERR:%d\n",
 				__func__, ch201_data->irq_gpio, ret);
 		}
@@ -456,7 +456,7 @@ void chbsp_group_set_io_dir_in(ch_group_t * grp_ptr)
 	if (ch201_data->irq_gpio >= 0) {
 		ret = gpio_direction_input(ch201_data->irq_gpio);
 		if (ret < 0) {
-			dev_err(&ch201_data->i2c->dev,
+			dev_info(&ch201_data->i2c->dev,
 				"%s gpio_dir_inp(%d) ERR:%d\n",
 				__func__, ch201_data->irq_gpio, ret);
 		}
@@ -470,7 +470,7 @@ void chbsp_set_io_dir_in(ch_dev_t * dev_ptr)
 	if (ch201_data->irq_gpio >= 0) {
 		ret = gpio_direction_input(ch201_data->irq_gpio);
 		if (ret < 0) {
-			dev_err(&ch201_data->i2c->dev,
+			dev_info(&ch201_data->i2c->dev,
 				"%s gpio_dir_inp(%d) ERR:%d\n",
 				__func__, ch201_data->irq_gpio, ret);
 		}
@@ -486,7 +486,7 @@ void chbsp_group_pin_init(ch_group_t * grp_ptr)
 {
     uint8_t ret;
 
-	dev_err(&ch201_data->i2c->dev, "ch201 enter chbsp_group_pin_init");
+	dev_info(&ch201_data->i2c->dev, "ch201 enter chbsp_group_pin_init");
 
     /* default device specific parameters */
 	ch201_data->irq_gpio = -1;
@@ -495,19 +495,19 @@ void chbsp_group_pin_init(ch_group_t * grp_ptr)
 	/* device tree parameters */
 	ch201_data->irq_gpio = of_get_named_gpio(ch201_data->i2c->dev.of_node, "irq_gpios", 0);
 	if (ch201_data->irq_gpio < 0) {
-		dev_err(&ch201_data->i2c->dev,
+		dev_info(&ch201_data->i2c->dev,
 				"%s gpio irq get named(%d) \n",
 				__func__, ch201_data->irq_gpio);
 	}
     ch201_data->prog_gpio = of_get_named_gpio(ch201_data->i2c->dev.of_node, "prog_gpios", 0);
 	if (ch201_data->prog_gpio < 0) {
-		dev_err(&ch201_data->i2c->dev,
+		dev_info(&ch201_data->i2c->dev,
 				"%s gpio prog get named(%d) \n",
 				__func__, ch201_data->prog_gpio);
 	}
     ch201_data->i2c_rst_gpio = of_get_named_gpio(ch201_data->i2c->dev.of_node, "i2c_rst_gpios", 0);
 	if (ch201_data->i2c_rst_gpio < 0) {
-		dev_err(&ch201_data->i2c->dev,
+		dev_info(&ch201_data->i2c->dev,
 				"%s gpio rst get named(%d) \n",
 				__func__, ch201_data->i2c_rst_gpio);
 	}
@@ -515,21 +515,21 @@ void chbsp_group_pin_init(ch_group_t * grp_ptr)
     if (ch201_data->irq_gpio >= 0) {
 		ret = gpio_request(ch201_data->irq_gpio, "irq_gpio");
 		if (ret) {
-			dev_err(&ch201_data->i2c->dev,
+			dev_info(&ch201_data->i2c->dev,
 				"%s gpio_request(%d) ERR:%d\n",
 				__func__, ch201_data->irq_gpio, ret);
 		}
 
 		ret = gpio_direction_input(ch201_data->irq_gpio);
 		if (ret < 0) {
-			dev_err(&ch201_data->i2c->dev,
+			dev_info(&ch201_data->i2c->dev,
 				"%s gpio_dir_inp(%d) ERR:%d\n",
 				__func__, ch201_data->irq_gpio, ret);
 		}
 
 		tdk_ultra_irq_num = gpio_to_irq(ch201_data->irq_gpio);
 		if (tdk_ultra_irq_num <= 0) {
-			dev_err(&ch201_data->i2c->dev, 
+			dev_info(&ch201_data->i2c->dev, 
 				"%s gpio_to_irq(%d) ERR:%d\n",
 				__func__, ch201_data->irq_gpio, tdk_ultra_irq_num);
 		}
@@ -556,14 +556,14 @@ void chbsp_group_pin_init(ch_group_t * grp_ptr)
     if (ch201_data->prog_gpio >= 0) {
 		ret = gpio_request(ch201_data->prog_gpio, "prog_gpio");
 		if (ret) {
-			dev_err(&ch201_data->i2c->dev,
+			dev_info(&ch201_data->i2c->dev,
 				"%s gpio_request(%d %s) ERR:%d\n",
 				__func__, ch201_data->prog_gpio, CHIRP_NAME, ret);
 		}
 
 		ret = gpio_direction_output(ch201_data->prog_gpio, 0);
 		if (ret < 0) {
-			dev_err(&ch201_data->i2c->dev,
+			dev_info(&ch201_data->i2c->dev,
 				"%s gpio_prog(%d) ERR:%d\n",
 				__func__, ch201_data->prog_gpio, ret);
 		}
@@ -572,14 +572,14 @@ void chbsp_group_pin_init(ch_group_t * grp_ptr)
     if (ch201_data->i2c_rst_gpio >= 0) {
 		ret = gpio_request(ch201_data->i2c_rst_gpio, "i2c_rst_gpio");
 		if (ret) {
-			dev_err(&ch201_data->i2c->dev,
+			dev_info(&ch201_data->i2c->dev,
 				"%s gpio_request(%d %s) ERR:%d\n",
 				__func__, ch201_data->i2c_rst_gpio, CHIRP_NAME, ret);
 		}
 
 		ret = gpio_direction_output(ch201_data->i2c_rst_gpio, 0);
 		if (ret < 0) {
-			dev_err(&ch201_data->i2c->dev,
+			dev_info(&ch201_data->i2c->dev,
 				"%s gpio_dir_inp(%d) ERR:%d\n",
 				__func__, ch201_data->i2c_rst_gpio, ret);
 		}
@@ -599,9 +599,9 @@ void chbsp_group_io_clear(ch_group_t * grp_ptr)
         gpio_set_value(ch201_data->irq_gpio, 0);
 		if(gpio_get_value(ch201_data->irq_gpio) != 0)
 		{
-			dev_err(&ch201_data->i2c->dev, "ch201 irq low err.");
+			dev_info(&ch201_data->i2c->dev, "ch201 irq low err.");
 		} else {
-			//dev_err(&ch201_data->i2c->dev, "ch201 irq low success.");
+			//dev_info(&ch201_data->i2c->dev, "ch201 irq low success.");
 		}
 	}
 }
@@ -618,9 +618,9 @@ void chbsp_group_io_set(ch_group_t * grp_ptr)
         gpio_set_value(ch201_data->irq_gpio, 1);
 		if(gpio_get_value(ch201_data->irq_gpio) != 1)
 		{
-			dev_err(&ch201_data->i2c->dev, "ch201 irq high err.");
+			dev_info(&ch201_data->i2c->dev, "ch201 irq high err.");
 		} else {
-			//dev_err(&ch201_data->i2c->dev, "ch201 irq high success.");
+			//dev_info(&ch201_data->i2c->dev, "ch201 irq high success.");
 		}
 	}
 }
@@ -632,7 +632,7 @@ void chbsp_group_io_set(ch_group_t * grp_ptr)
  */
 void chbsp_io_interrupt_enable(ch_dev_t * dev_ptr)
 {
-	dev_err(&ch201_data->i2c->dev, "ch201: enter chbsp_io_interrupt_enable.");
+	dev_info(&ch201_data->i2c->dev, "ch201: enter chbsp_io_interrupt_enable.");
 }
 
 void chbsp_group_io_interrupt_enable(ch_group_t * grp_ptr)
@@ -651,7 +651,7 @@ void chbsp_group_io_interrupt_enable(ch_group_t * grp_ptr)
  */
 void chbsp_io_interrupt_disable(ch_dev_t * dev_ptr)
 {
-	dev_err(&ch201_data->i2c->dev, "ch201: enter chbsp_io_interrupt_disable.");
+	dev_info(&ch201_data->i2c->dev, "ch201: enter chbsp_io_interrupt_disable.");
 }
 
 void chbsp_group_io_interrupt_disable(ch_group_t * grp_ptr)
@@ -941,18 +941,18 @@ static int chirp_probe(struct i2c_client *client, const struct i2c_device_id *id
   	}
 
 	if (ret) {
-		dev_err(&client->dev, "chdrv_group_prepare failed.\n");
+		dev_info(&client->dev, "chdrv_group_prepare failed.\n");
 		return ret;
 	}
 
 RESET_AND_LOAD:
 	if (ret == 0) {
-        dev_err(&client->dev, "starting group... \r\n");
+        dev_info(&client->dev, "starting group... \r\n");
         ret = ch_group_start(ch201_data->chirp_group);
     }
 
 	if (ret) {
-		dev_err(&client->dev, "starting group failed \r\n");
+		dev_info(&client->dev, "starting group failed \r\n");
         return -1;
 	}
 
@@ -962,18 +962,18 @@ RESET_AND_LOAD:
 	ret = chdrv_group_wait_for_lock(grp_ptr);
 
 	if (ret != 0 && prog_tries++ < CH_PROG_XFER_RETRY + 1) {
-		dev_err(&client->dev, "FAILED: %d", CH_PROG_XFER_RETRY + 1);
+		dev_info(&client->dev, "FAILED: %d", CH_PROG_XFER_RETRY + 1);
 		ch201_data->i2c_addr = CHIRP_I2C_ADDRS;
 		goto RESET_AND_LOAD;
     }
 
 	if (ret == 0) {
-		dev_err(&client->dev, "starting group r... \r\n");
+		dev_info(&client->dev, "starting group r... \r\n");
         ret = ch_group_start_r(ch201_data->chirp_group);
     }
 
 	if (ret) {
-		dev_err(&client->dev, "starting group r failed \r\n");
+		dev_info(&client->dev, "starting group r failed \r\n");
         return -1;
 	}
 
@@ -1028,7 +1028,7 @@ RESET_AND_LOAD:
 			if (!ret) {
 				display_config_info(dev_ptr);
 			} else {
-				dev_err(&client->dev, "ch201 Device %d: Error during ch_set_config()\n", dev_num);
+				dev_info(&client->dev, "ch201 Device %d: Error during ch_set_config()\n", dev_num);
 			}
 
 			/* Get number of active samples per measurement */
@@ -1043,7 +1043,7 @@ RESET_AND_LOAD:
 
 	ret = misc_register(&sen_ulsonic_miscdev);
 	if (ret) {
-		dev_err(&client->dev, "stmvl53l5cx : Failed to create misc device, err = %d\n", ret);
+		dev_info(&client->dev, "stmvl53l5cx : Failed to create misc device, err = %d\n", ret);
 		return -1;
 	}
 
@@ -1065,6 +1065,7 @@ static struct i2c_driver chirp_driver = {
 		.name			= CHIRP_NAME,
 		.owner			= THIS_MODULE,
 		.of_match_table		= of_match_ptr(chirp_of_match),
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.id_table			= chirp_i2c_device_ids,
 };

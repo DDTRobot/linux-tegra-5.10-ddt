@@ -123,7 +123,7 @@ int16_t sht3x_measure_blocking_read(int32_t* temperature,
         udelay(SHT3X_MEASUREMENT_DURATION_USEC);
         ret = sht3x_read(temperature, humidity);
     } else {
-        pr_err("sht30 mesure failed: %d", ret);
+        pr_info("sht30 mesure failed: %d", ret);
     }
     return ret;
 }
@@ -139,7 +139,7 @@ static long sht30_ioctl(struct file *file,
 
 	ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
 	if (ret) {
-		pr_err("Error at %s(%d)\n", __func__, __LINE__);
+		pr_info("Error at %s(%d)\n", __func__, __LINE__);
 		return -EINVAL;
 	}
 
@@ -150,21 +150,21 @@ static long sht30_ioctl(struct file *file,
 		case SEN_HUMI_IOCTL_MEASURE:
 			ret = sht3x_measure_blocking_read(&temperature, &humidity);
 			if (ret != 0) {
-				pr_err("sht30: error reading measurement\n");
+				pr_info("sht30: error reading measurement\n");
 			}
 
 			// copy to user buffer the read transfer
 			ret = copy_to_user(data_ptr, &temperature, 4);
 
 			if (ret) {
-				pr_err("sht30: Error at %s(%d) when copy temperature to user.\n", __func__, __LINE__);
+				pr_info("sht30: Error at %s(%d) when copy temperature to user.\n", __func__, __LINE__);
 				return -EINVAL;
 			}
 
 			ret = copy_to_user(data_ptr + 4, &humidity, 4);
 
 			if (ret) {
-				pr_err("sht30: Error at %s(%d) when copy humidity to user.\n", __func__, __LINE__);
+				pr_info("sht30: Error at %s(%d) when copy humidity to user.\n", __func__, __LINE__);
 				return -EINVAL;
 			}
 
@@ -173,13 +173,13 @@ static long sht30_ioctl(struct file *file,
 			ret = sht30_read_multi(sht30_i2c_client, raw_data_buffer, SHT3X_CMD_READ_STATUS_REG, status, 2);
 			if(ret)
 			{
-				pr_err("sht30 get status failed\n");
+				pr_info("sht30 get status failed\n");
 			} else {
 				pr_info("sht30 get status :%x %x", status[1], status[0]);
 			}
 			ret = copy_to_user(data_ptr, status, 2);
             if (ret) {
-                pr_err("sht30: Error at %s(%d) when copy status to user.\n", __func__, __LINE__);
+                pr_info("sht30: Error at %s(%d) when copy status to user.\n", __func__, __LINE__);
                 return -EINVAL;
             }
 			break;
@@ -210,7 +210,7 @@ static int sht30_probe(struct i2c_client *client,
     ret = sht30_read_multi(sht30_i2c_client, raw_data_buffer, SHT3X_CMD_READ_STATUS_REG, status, 2);
 	if(ret)
 	{
-		pr_err("sht30 get status failed\n");
+		pr_info("sht30 get status failed\n");
 		return -EIO;
 	} else {
 		pr_info("sht30 get status :%x %x", status[1], status[0]);
@@ -223,7 +223,7 @@ static int sht30_probe(struct i2c_client *client,
 
 	ret = misc_register(&sen_humi_miscdev);
 	if (ret) {
-		pr_err("stmvl53l5cx : Failed to create misc device, err = %d\n", ret);
+		pr_info("sht30 : Failed to create misc device, err = %d\n", ret);
 		return -1;
 	}
 
@@ -242,6 +242,7 @@ static struct i2c_driver sht30_i2c_driver = {
 		.name = SHT30_DRV_NAME,
 		.owner = THIS_MODULE,
 		.of_match_table = of_match_ptr(sen_humi_of_match),
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.probe = sht30_probe,
 	.remove = sht30_remove,
