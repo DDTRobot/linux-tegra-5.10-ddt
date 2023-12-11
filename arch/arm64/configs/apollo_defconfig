@@ -1872,12 +1872,6 @@ CONFIG_DHD_SET_RANDOM_MAC_VAL=0x001A11
 CONFIG_RTL8822CE=m
 
 #
-# Enable WiMAX (Networking options) to see the WiMAX drivers
-#
-CONFIG_NET_FAILOVER=y
-CONFIG_TEGRA_HV_NET=y
-
-#
 # Input device support
 #
 CONFIG_INPUT=y
