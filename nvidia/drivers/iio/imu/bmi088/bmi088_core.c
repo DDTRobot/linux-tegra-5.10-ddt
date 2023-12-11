@@ -190,13 +190,13 @@ int bmi088_get_data(void)
 
 static int bmi088_open(struct inode *inode, struct file *file)
 {
-	pr_debug("bmi088 : %s(%d)\n", __func__, __LINE__);
+    dev_info(&st->i2c->dev, "%s(%d)\n", __func__, __LINE__);
 	return 0;
 }
 
 static int bmi088_release(struct inode *inode, struct file *file)
 {
-	pr_debug("bmi088 : %s(%d)\n", __func__, __LINE__);
+    dev_info(&st->i2c->dev, "%s(%d)\n", __func__, __LINE__);
 	return 0;
 }
 
@@ -365,17 +365,6 @@ static long bmi088_ioctl(struct file *file,
                 self_rslt = 1;
             }
 
-
-            // self_rslt = self_rslt & 0x16;
-
-            // if(self_rslt ==  0x12) {
-            //     dev_err(&st->i2c->dev, "bmi088: self_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
-            //     self_rslt = 0;
-            // } else {
-            //     dev_err(&st->i2c->dev, "bmi088: error self_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
-            //     self_rslt = 0;
-            // }
-
             ret = copy_to_user(data_ptr + 2, &self_rslt, 1);
             if (ret) {
                 dev_err(&st->i2c->dev, "bmi088: Error at %s(%d) when copy gdev id to user.\n", __func__, __LINE__);
@@ -393,16 +382,6 @@ static long bmi088_ioctl(struct file *file,
                 dev_err(&st->i2c->dev, "bmi088: error gself_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
                 self_rslt = 1;
             }
-
-            // self_rslt = self_rslt & 0x16;
-
-            // if(self_rslt ==  0x12) {
-            //     dev_err(&st->i2c->dev, "bmi088: self_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
-            //     self_rslt = 0;
-            // } else {
-            //     dev_err(&st->i2c->dev, "bmi088: error self_rslt at %s(%d): 0x%x.\n", __func__, __LINE__, self_rslt);
-            //     self_rslt = 0;
-            // }
 
             ret = copy_to_user(data_ptr + 3, &self_rslt, 1);
             if (ret) {
@@ -486,7 +465,7 @@ static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
     ret = misc_register(&bmi_imu_miscdev);
 	if (ret) {
-		pr_err("bmi088: Failed to create misc device, err = %d\n", ret);
+        dev_err(&st->i2c->dev, "Failed to create misc device, err = %d\n", ret);
 		return -1;
 	}
 
