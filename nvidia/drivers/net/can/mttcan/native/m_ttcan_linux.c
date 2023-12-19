@@ -233,8 +233,8 @@ static const struct tegra_mttcan_soc_info t186_mttcan_sinfo = {
 
 static const struct tegra_mttcan_soc_info t194_mttcan_sinfo = {
 	.set_can_core_clk = true,
-	.can_core_clk_rate = 50000000,
-	.can_clk_rate = 200000000,
+	.can_core_clk_rate = 40000000,
+	.can_clk_rate = 160000000,
 	.use_external_timer = true,
 };
 
