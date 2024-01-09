@@ -3,7 +3,7 @@ menu "Proximity sensors"
 #
 # Proximity sensors
 #
-source "drivers/iio/proximity/ch201/Kconfig"
+source "drivers/iio/proximity/ch101/Kconfig"
 source "drivers/iio/proximity/vl53l5cx/Kconfig"
 config NVS_IQS2X3
 	tristate "Azoteq IQS253/IQS263 SAR proximity"
