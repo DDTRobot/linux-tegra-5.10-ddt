@@ -497,6 +497,7 @@ static struct i2c_driver bmi_driver = {
 		.name			= BMI_NAME,
 		.owner			= THIS_MODULE,
 		.of_match_table		= of_match_ptr(bmi_of_match),
+        .probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.id_table			= bmi_i2c_device_ids,
 };
