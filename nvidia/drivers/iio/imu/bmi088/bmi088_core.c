@@ -407,9 +407,9 @@ static const struct file_operations bmi088_ranging_fops = {
 static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	int ret;
-	struct i2c_msg msg[2];
-	u8 reg = 0x00;
-	u8 chip_id;
+	// struct i2c_msg msg[2];
+	// u8 reg = 0x00;
+	// u8 chip_id;
     u32 val32 = 0;
 
 	st = devm_kzalloc(&client->dev, sizeof(*st), GFP_KERNEL);
@@ -423,7 +423,7 @@ static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	i2c_set_clientdata(client, st);
 	st->i2c = client;
     st->dev = bmi08x_dev;
-
+#if 0
 	{
 		msg[0].addr = client->addr;
 		msg[0].flags = 0;
@@ -444,7 +444,7 @@ static int bmi_probe(struct i2c_client *client, const struct i2c_device_id *id)
         }
 			
 	}
-
+#endif
     bmi08x_gyro_spec = st->i2c->addr;
     
     if (!of_property_read_u32(st->i2c->dev.of_node, "accel_i2c_addr", &val32))
