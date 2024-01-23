@@ -129,6 +129,14 @@
 				hdr40-pin28 {
 					nvidia,pins = "gen2_i2c_scl_pcc7";
 				};
+				
+				hdr40-pin32 {
+					nvidia,pins = "soc_gpio19_pg6";
+					nvidia,function = "gp";
+					nvidia,pin-group = "pwm7";
+					nvidia,tristate = <TEGRA_PIN_DISABLE>;
+					nvidia,enable-input = <TEGRA_PIN_DISABLE>;
+
 				hdr40-pin35 {
 					nvidia,pins = "soc_gpio44_pi2";
 					nvidia,function = "i2s2";
