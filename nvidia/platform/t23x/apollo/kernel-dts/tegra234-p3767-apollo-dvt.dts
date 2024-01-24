@@ -21,7 +21,7 @@
 #include <t234-common-cvm/tegra234-thermal-userspace-alert.dtsi>
 #include "cvm/tegra234-p3767-0000.dtsi"
 #include "cvb/tegra234-p3509-a02.dtsi"
-
+#include "tegra234-p3767-elrs.dtsi"
 
 
 / {
