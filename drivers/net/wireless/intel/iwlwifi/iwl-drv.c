@@ -64,7 +64,7 @@
 #include <linux/firmware.h>
 #include <linux/module.h>
 #include <linux/vmalloc.h>
-
+#include <linux/gpio.h>
 #include "iwl-drv.h"
 #include "iwl-csr.h"
 #include "iwl-debug.h"
@@ -1795,6 +1795,8 @@ IWL_EXPORT_SYMBOL(iwl_opmode_deregister);
 static int __init iwl_drv_init(void)
 {
 	int i, err;
+
+	gpio_direction_output(389,1);
 
 	mutex_init(&iwlwifi_opmode_table_mtx);
 
