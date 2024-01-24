@@ -230,7 +230,7 @@
 	
 	pwm@32e0000 {/* PWM7 - 40pin header, pin 32 */
 		status = "okay";
-		gpios = <&tegra_main_gpio TEGRA234_MAIN_GPIO(G, 6) GPIO_ACTIVE_HIGH>;
+		gpios = <&tegra_aon_gpio TEGRA234_MAIN_GPIO(G, 6) GPIO_ACTIVE_HIGH>;
 	};
 
 	bluedroid_pm {
