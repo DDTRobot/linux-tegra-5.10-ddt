@@ -632,7 +632,7 @@ void chbsp_group_io_set(ch_group_t * grp_ptr)
  */
 void chbsp_io_interrupt_enable(ch_dev_t * dev_ptr)
 {
-	dev_err(&ch101_data->i2c->dev, "ch101: enter chbsp_io_interrupt_enable.");
+	// dev_err(&ch101_data->i2c->dev, "ch101: enter chbsp_io_interrupt_enable.");
 }
 
 void chbsp_group_io_interrupt_enable(ch_group_t * grp_ptr)
@@ -651,7 +651,7 @@ void chbsp_group_io_interrupt_enable(ch_group_t * grp_ptr)
  */
 void chbsp_io_interrupt_disable(ch_dev_t * dev_ptr)
 {
-	dev_err(&ch101_data->i2c->dev, "ch101: enter chbsp_io_interrupt_disable.");
+	// dev_err(&ch101_data->i2c->dev, "ch101: enter chbsp_io_interrupt_disable.");
 }
 
 void chbsp_group_io_interrupt_disable(ch_group_t * grp_ptr)
