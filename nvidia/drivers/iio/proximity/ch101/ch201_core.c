@@ -947,12 +947,14 @@ static int chirp_probe(struct i2c_client *client, const struct i2c_device_id *id
 
 RESET_AND_LOAD:
 	if (ret == 0) {
-        dev_err(&client->dev, "starting group... \r\n");
+        dev_info(&client->dev, "starting group... \r\n");
         ret = ch_group_start(ch101_data->chirp_group);
     }
 
-	dev_err(&client->dev, "done.\n");
-	dev_err(&client->dev, ".ko load success 202307121423.\n");
+	if(ret){
+		dev_err(&client->dev, "ch_group_start failed\r\n");
+		return ret;
+	}
 
 	ch101_data->i2c_addr = CHIRP_APP_I2C_ADDRS;
 	chbsp_delay_ms(1);
@@ -960,7 +962,7 @@ RESET_AND_LOAD:
 	ret = chdrv_group_wait_for_lock(grp_ptr);
 
 	if (ret != 0 && prog_tries++ < CH_PROG_XFER_RETRY + 1) {
-		dev_err(&client->dev, "FAILED: %d", CH_PROG_XFER_RETRY + 1);
+		dev_err(&client->dev, "wait_for_lock failed times: %d", CH_PROG_XFER_RETRY + 1);
 		ch101_data->i2c_addr = CHIRP_I2C_ADDRS;
 		goto RESET_AND_LOAD;
     }
@@ -969,6 +971,11 @@ RESET_AND_LOAD:
 		dev_err(&client->dev, "starting group r... \r\n");
         ret = ch_group_start_r(ch101_data->chirp_group);
     }
+
+	if(ret){
+		dev_err(&client->dev, "ch_group_start_r failed\r\n");
+		return ret;
+	}
 
 	for (dev_num = 0; dev_num < num_ports; dev_num++) {
 		dev_ptr = ch_get_dev_ptr(grp_ptr, dev_num);
