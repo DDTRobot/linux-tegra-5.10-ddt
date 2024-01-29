@@ -13,17 +13,23 @@
 
 / {
 	i2c@c250000 {
-		stmvl53l5cx: stmvl53l5cx {
-			compatible = "st,stmvl53l5cx";
-			reg = <0x29>;
-			/* intr_gpio_nb = <&tegra_main_gpio TEGRA234_MAIN_GPIO(N, 1) GPIO_ACTIVE_LOW>; //GPIO12
-			rst_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(H, 0) GPIO_ACTIVE_HIGH>; //GPIO13
-			power_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(G, 6) GPIO_ACTIVE_HIGH>; //GPIO07
-			lpn_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Q, 6) GPIO_ACTIVE_HIGH>; //GPIO11 */
+		stmvl53l5cx_0@27 {
+			compatible = "st,stmvl53l5cx_0";
+			reg = <0x27>;
 			intr_gpio_nb = <&tegra_main_gpio TEGRA234_MAIN_GPIO(AC, 6) GPIO_ACTIVE_LOW>; //GPIO9
 			rst_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Q, 6) GPIO_ACTIVE_HIGH>; //GPIO11
-			power_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Z, 4) GPIO_ACTIVE_HIGH>; //SPI0_MISO
+			power_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Y, 1) GPIO_ACTIVE_LOW>; //SPI1_MISO
 			lpn_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(N, 1) GPIO_ACTIVE_HIGH>; //GPIO12
+			status = "okay";
+		};
+
+		stmvl53l5cx_1@29 {
+			compatible = "st,stmvl53l5cx_1";
+			reg = <0x29>;
+			intr_gpio_nb = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Z, 5) GPIO_ACTIVE_LOW>; //GPIO9
+			rst_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Y, 0) GPIO_ACTIVE_HIGH>; //GPIO11
+			power_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Z, 3) GPIO_ACTIVE_LOW>; //SPI0_MISO
+			lpn_gpio = <&tegra_main_gpio TEGRA234_MAIN_GPIO(Z, 4) GPIO_ACTIVE_LOW>; //GPIO12
 			status = "okay";
 		};
 
