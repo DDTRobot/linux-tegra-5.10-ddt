@@ -52,36 +52,36 @@
 
 #include "stmvl53l5cx_i2c.h"
 
-int32_t stmvl53l5cx_read_multi(struct i2c_client *client,
-	uint8_t * i2c_buffer,
-	uint16_t reg_index,
-	uint8_t *pdata,
-	uint32_t count)
+int32_t stmvl53l5cx_read_multi(struct i2c_client *client, uint8_t *i2c_buffer,
+			       uint16_t reg_index, uint8_t *pdata,
+			       uint32_t count)
 {
 	int32_t status = 0;
 	uint32_t position = 0;
 	uint32_t data_size = 0;
 	struct i2c_msg message;
 
-	message.addr  = 0x29;
+	message.addr = client->addr;
 
 	do {
-		data_size = (count - position) > VL53L5CX_COMMS_CHUNK_SIZE ? VL53L5CX_COMMS_CHUNK_SIZE : (count - position);
+		data_size = (count - position) > VL53L5CX_COMMS_CHUNK_SIZE ?
+				    VL53L5CX_COMMS_CHUNK_SIZE :
+				    (count - position);
 
 		i2c_buffer[0] = (reg_index + position) >> 8;
 		i2c_buffer[1] = (reg_index + position) & 0xFF;
 
 		message.flags = 0;
-		message.buf   = i2c_buffer;
-		message.len   = 2;
+		message.buf = i2c_buffer;
+		message.len = 2;
 
 		status = i2c_transfer(client->adapter, &message, 1);
 		if (status != 1)
 			return -EIO;
 
 		message.flags = 1;
-		message.buf   = pdata + position;
-		message.len   = data_size;
+		message.buf = pdata + position;
+		message.len = data_size;
 
 		status = i2c_transfer(client->adapter, &message, 1);
 		if (status != 1)
@@ -94,22 +94,22 @@ int32_t stmvl53l5cx_read_multi(struct i2c_client *client,
 	return 0;
 }
 
-
-int32_t stmvl53l5cx_write_multi(struct i2c_client *client,
-		uint8_t *i2c_buffer,
-		uint16_t reg_index,
-		uint8_t *pdata,
-		uint32_t count)
+int32_t stmvl53l5cx_write_multi(struct i2c_client *client, uint8_t *i2c_buffer,
+				uint16_t reg_index, uint8_t *pdata,
+				uint32_t count)
 {
 	int32_t status = 0;
 	uint32_t position = 0;
 	int32_t data_size = 0;
 	struct i2c_msg message;
 
-	message.addr  = 0x29;
+	message.addr = client->addr;
 
 	do {
-		data_size = (count - position) > (VL53L5CX_COMMS_CHUNK_SIZE-2) ? (VL53L5CX_COMMS_CHUNK_SIZE-2) : (count - position);
+		data_size =
+			(count - position) > (VL53L5CX_COMMS_CHUNK_SIZE - 2) ?
+				(VL53L5CX_COMMS_CHUNK_SIZE - 2) :
+				(count - position);
 
 		memcpy(&i2c_buffer[2], &pdata[position], data_size);
 
@@ -117,28 +117,28 @@ int32_t stmvl53l5cx_write_multi(struct i2c_client *client,
 		i2c_buffer[1] = (reg_index + position) & 0xFF;
 
 		message.flags = 0;
-		message.len   = data_size + 2;
-		message.buf   = i2c_buffer;
+		message.len = data_size + 2;
+		message.buf = i2c_buffer;
 
 		status = i2c_transfer(client->adapter, &message, 1);
 		if (status != 1)
 			return -EIO;
 
-		position +=  data_size;
+		position += data_size;
 
 	} while (position < count);
 
 	return 0;
 }
 
-int32_t stmvl53l5cx_write_byte(
-	struct i2c_client *client, uint8_t * i2c_buffer, uint16_t address, uint8_t value)
+int32_t stmvl53l5cx_write_byte(struct i2c_client *client, uint8_t *i2c_buffer,
+			       uint16_t address, uint8_t value)
 {
 	return stmvl53l5cx_write_multi(client, i2c_buffer, address, &value, 1);
 }
 
-int32_t stmvl53l5cx_read_byte(
-	struct i2c_client *client, uint8_t * i2c_buffer, uint16_t address, uint8_t *p_value)
+int32_t stmvl53l5cx_read_byte(struct i2c_client *client, uint8_t *i2c_buffer,
+			      uint16_t address, uint8_t *p_value)
 {
 	return stmvl53l5cx_read_multi(client, i2c_buffer, address, p_value, 1);
 }
