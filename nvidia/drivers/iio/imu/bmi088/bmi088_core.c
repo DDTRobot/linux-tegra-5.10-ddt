@@ -111,7 +111,6 @@ BMI08X_INTF_RET_TYPE bmi08x_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t l
     ret = i2c_transfer(st->i2c->adapter, &msg, 1);
     if (ret != 1)
     {
-        dev_err(&st->i2c->dev, "bmi08x_read w err");
         return -EIO;
     }
     msg.flags = 1;
@@ -121,7 +120,6 @@ BMI08X_INTF_RET_TYPE bmi08x_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t l
     ret = i2c_transfer(st->i2c->adapter, &msg, 1);
     if (ret != 1)
     {
-        dev_err(&st->i2c->dev, "bmi08x_read r err");
         return -EIO;
     }
 
@@ -148,7 +146,6 @@ BMI08X_INTF_RET_TYPE bmi08x_write(uint8_t reg_addr, const uint8_t *reg_data, uin
     ret = i2c_transfer(st->i2c->adapter, &msg, 1);
     if (ret != 1)
 	{
-        dev_err(&st->i2c->dev, "bmi08x_write w err");
         return -EIO;
     }
 
@@ -177,12 +174,12 @@ int bmi088_get_data(void)
     int8_t rslt;
     rslt = bmi08g_get_data(&bmi08x_gyro, &bmi08x_dev);
     if (rslt != BMI08X_OK) {
-        dev_err(&st->i2c->dev, "Gyro error: %d", rslt);
+	    return rslt;
     }
 
     rslt = bmi08a_get_data(&bmi08x_accel, &bmi08x_dev);
     if (rslt != BMI08X_OK) {
-        dev_err(&st->i2c->dev, "Accel error: %d", rslt);
+        return rslt;
     }
 
     return 0;
@@ -256,7 +253,7 @@ int bmi088_init(void)
 
         rslt = bmi08g_set_power_mode(&bmi08x_dev);
         if (rslt == BMI08X_OK) {
-            dev_err(&st->i2c->dev, "bmi088 set_power_mode ok.");
+            dev_info(&st->i2c->dev, "bmi088 set_power_mode ok.");
             rslt = bmi08g_set_meas_conf(&bmi08x_dev);
         } else {
             dev_err(&st->i2c->dev, "bmi088 Gyro power on failed.");
@@ -265,8 +262,8 @@ int bmi088_init(void)
     }
 
     if (rslt == BMI08X_OK) {
-        dev_err(&st->i2c->dev, "Accel ID: 0x%02X", bmi08x_dev.accel_chip_id);
-        dev_err(&st->i2c->dev, "Gyro ID: 0x%02X", bmi08x_dev.gyro_chip_id);
+        dev_info(&st->i2c->dev, "Accel ID: 0x%02X", bmi08x_dev.accel_chip_id);
+        dev_info(&st->i2c->dev, "Gyro ID: 0x%02X", bmi08x_dev.gyro_chip_id);
     } else {
         dev_err(&st->i2c->dev, "BMI08x initial failed");
     }
@@ -292,7 +289,7 @@ static long bmi088_ioctl(struct file *file,
 
     ret = copy_from_user(&comms_struct, (void __user *)arg, sizeof(comms_struct));
     if (ret) {
-        dev_err(&st->i2c->dev, "Error at %s(%d)\n", __func__, __LINE__);
+        // dev_err(&st->i2c->dev, "Error at %s(%d)\n", __func__, __LINE__);
         return -EINVAL; 
     }
 
@@ -316,7 +313,7 @@ static long bmi088_ioctl(struct file *file,
 		case BMI_IMU_IOCTL_TRANSFER:
 			ret = bmi088_get_data();
 			if (ret) {
-				dev_err(&st->i2c->dev, "Error at bmi088_get_data %s(%d)\n", __func__, __LINE__);
+				// dev_err(&st->i2c->dev, "Error at bmi088_get_data %s(%d)\n", __func__, __LINE__);
 			}
 
 			ret = copy_to_user(data_ptr, &bmi08x_accel, 2);
@@ -324,7 +321,7 @@ static long bmi088_ioctl(struct file *file,
             ret = copy_to_user(data_ptr + 4, &bmi08x_accel.z, 2);
 
 			if (ret) {
-                dev_err(&st->i2c->dev, "bmi088: Error at %s(%d) when copy accel_data to user.\n", __func__, __LINE__);
+                // dev_err(&st->i2c->dev, "bmi088: Error at %s(%d) when copy accel_data to user.\n", __func__, __LINE__);
 				return -EINVAL;
 			}
 
@@ -333,7 +330,7 @@ static long bmi088_ioctl(struct file *file,
             ret = copy_to_user(data_ptr + 10, &bmi08x_gyro.z, 2);
 
 			if (ret) {
-				dev_err(&st->i2c->dev, "bmi088: Error at %s(%d) when copy gyro to user.\n", __func__, __LINE__);
+				// dev_err(&st->i2c->dev, "bmi088: Error at %s(%d) when copy gyro to user.\n", __func__, __LINE__);
 				return -EINVAL;
 			}
 
