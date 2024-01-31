@@ -23,6 +23,8 @@
   Some of the "one port" devices actually exhibit multiple USB instances
   on the USB bus. This is not a bug, these ports are used for different
   device features.
+
+  Based on version modification, the author is Quectel <fae-support@quectel.com>
 */
 
 #define DRIVER_AUTHOR "Matthias Urlichs <smurf@smurf.noris.de>"
@@ -252,10 +254,13 @@ static void option_instat_callback(struct urb *urb);
 #define QUECTEL_PRODUCT_EG95			0x0195
 #define QUECTEL_PRODUCT_BG96			0x0296
 #define QUECTEL_PRODUCT_EP06			0x0306
+#define QUECTEL_PRODUCT_EM05G			0x030a
+#define QUECTEL_PRODUCT_EM060K			0x030b
 #define QUECTEL_PRODUCT_EM12			0x0512
 #define QUECTEL_PRODUCT_RM500Q			0x0800
 #define QUECTEL_PRODUCT_EC200S_CN		0x6002
 #define QUECTEL_PRODUCT_EC200T			0x6026
+#define QUECTEL_PRODUCT_RM500K			0x7001
 
 #define CMOTECH_VENDOR_ID			0x16d8
 #define CMOTECH_PRODUCT_6001			0x6001
@@ -432,8 +437,12 @@ static void option_instat_callback(struct urb *urb);
 #define CINTERION_PRODUCT_CLS8			0x00b0
 #define CINTERION_PRODUCT_MV31_MBIM		0x00b3
 #define CINTERION_PRODUCT_MV31_RMNET		0x00b7
+#define CINTERION_PRODUCT_MV31_2_MBIM		0x00b8
+#define CINTERION_PRODUCT_MV31_2_RMNET		0x00b9
 #define CINTERION_PRODUCT_MV32_WA		0x00f1
 #define CINTERION_PRODUCT_MV32_WB		0x00f2
+#define CINTERION_PRODUCT_MV32_WA_RMNET		0x00f3
+#define CINTERION_PRODUCT_MV32_WB_RMNET		0x00f4
 
 /* Olivetti products */
 #define OLIVETTI_VENDOR_ID			0x0b3c
@@ -569,6 +578,10 @@ static void option_instat_callback(struct urb *urb);
 #define WETELECOM_PRODUCT_6802			0x6802
 #define WETELECOM_PRODUCT_WMD300		0x6803
 
+/* OPPO products */
+#define OPPO_VENDOR_ID				0x22d9
+#define OPPO_PRODUCT_R11			0x276c
+
 
 /* Device flags */
 
@@ -589,6 +602,39 @@ static void option_instat_callback(struct urb *urb);
 
 
 static const struct usb_device_id option_ids[] = {
+#if 1 //Added by Quectel
+	{ USB_DEVICE(0x05C6, 0x9090) }, /* Quectel UC15 */
+	{ USB_DEVICE(0x05C6, 0x9003) }, /* Quectel UC20 */
+	{ USB_DEVICE(0x05C6, 0x9215) }, /* Quectel EC20(MDM9215) */
+    { USB_DEVICE(0x05C6, 0x9091) }, /* Quectel QCM6125 */
+	{ USB_DEVICE(0x05C6, 0x90DB) }, /* Quectel QCM6490 */
+	{ USB_DEVICE(0x2C7C, 0x0125) }, /* Quectel EC20(MDM9x07)/EC25/EG25 */
+	{ USB_DEVICE(0x2C7C, 0x0121) }, /* Quectel EC21 */
+    { USB_DEVICE(0x2C7C, 0x030E) }, /* Quectel EM05G */
+	{ USB_DEVICE(0x2C7C, 0x0191) }, /* Quectel EG91 */
+	{ USB_DEVICE(0x2C7C, 0x0195) }, /* Quectel EG95 */
+	{ USB_DEVICE(0x2C7C, 0x0306) }, /* Quectel EG06/EP06/EM06 */
+	{ USB_DEVICE(0x2C7C, 0x030B) }, /* Quectel EG065K/EG060K */
+	{ USB_DEVICE(0x2C7C, 0x0514) }, /* Quectel BL EG060K RNDIS Only */
+	{ USB_DEVICE(0x2C7C, 0x0512) }, /* Quectel EG12/EP12/EM12/EG16/EG18 */
+	{ USB_DEVICE(0x2C7C, 0x0296) }, /* Quectel BG96 */
+	{ USB_DEVICE(0x2C7C, 0x0700) }, /* Quectel BG95/BG77/BG600L-M3/BC69 */
+	{ USB_DEVICE(0x2C7C, 0x0435) }, /* Quectel AG35 */
+	{ USB_DEVICE(0x2C7C, 0x0415) }, /* Quectel AG15 */
+	{ USB_DEVICE(0x2C7C, 0x0452) }, /* Quectel AG520 */
+	{ USB_DEVICE(0x2C7C, 0x0455) }, /* Quectel AG550 */
+	{ USB_DEVICE(0x2C7C, 0x0620) }, /* Quectel EG20 */
+	{ USB_DEVICE(0x2C7C, 0x0800) }, /* Quectel RG500/RM500/RG510/RM510 */
+	{ USB_DEVICE(0x2C7C, 0x0801) }, /* Quectel RG520/RM520/SG520 */
+    { USB_DEVICE(0x2C7C, 0x0122) }, /* Quectel RG650 SDX7X */
+    { USB_DEVICE(0x2C7C, 0x0316) }, /* Quectel RG255 SDX35 */
+	{ USB_DEVICE(0x2C7C, 0x6026) }, /* Quectel EC200 */
+	{ USB_DEVICE(0x2C7C, 0x6120) }, /* Quectel UC200 */
+	{ USB_DEVICE(0x2C7C, 0x6000) }, /* Quectel EC200/UC200 */
+	{ USB_DEVICE(0x3763, 0x3C93) }, /* Quectel GW */
+	{ USB_DEVICE(0x3C93, 0xFFFF) }, /* Quectel GW */
+	{ .match_flags = USB_DEVICE_ID_MATCH_VENDOR, .idVendor = 0x2C7C }, /* Match All Quectel Modules */
+#endif
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_COLT) },
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA) },
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA_LIGHT) },
@@ -1132,17 +1178,25 @@ static const struct usb_device_id option_ids[] = {
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EP06, 0xff, 0xff, 0xff),
 	  .driver_info = RSVD(1) | RSVD(2) | RSVD(3) | RSVD(4) | NUMEP2 },
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EP06, 0xff, 0, 0) },
+	{ USB_DEVICE_INTERFACE_CLASS(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EM05G, 0xff),
+	  .driver_info = RSVD(6) | ZLP },
+	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EM060K, 0xff, 0x00, 0x40) },
+	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EM060K, 0xff, 0xff, 0x30) },
+	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EM060K, 0xff, 0xff, 0x40) },
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EM12, 0xff, 0xff, 0xff),
 	  .driver_info = RSVD(1) | RSVD(2) | RSVD(3) | RSVD(4) | NUMEP2 },
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EM12, 0xff, 0, 0) },
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, 0x0620, 0xff, 0xff, 0x30) },	/* EM160R-GL */
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, 0x0620, 0xff, 0, 0) },
+	{ USB_DEVICE_INTERFACE_CLASS(QUECTEL_VENDOR_ID, 0x0700, 0xff), /* BG95 */
+	  .driver_info = RSVD(3) | ZLP },
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_RM500Q, 0xff, 0xff, 0x30) },
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_RM500Q, 0xff, 0, 0) },
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_RM500Q, 0xff, 0xff, 0x10),
 	  .driver_info = ZLP },
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200S_CN, 0xff, 0, 0) },
 	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_EC200T, 0xff, 0, 0) },
+	{ USB_DEVICE_AND_INTERFACE_INFO(QUECTEL_VENDOR_ID, QUECTEL_PRODUCT_RM500K, 0xff, 0x00, 0x00) },
 
 	{ USB_DEVICE(CMOTECH_VENDOR_ID, CMOTECH_PRODUCT_6001) },
 	{ USB_DEVICE(CMOTECH_VENDOR_ID, CMOTECH_PRODUCT_CMU_300) },
@@ -1275,6 +1329,7 @@ static const struct usb_device_id option_ids[] = {
 	  .driver_info = NCTRL(0) | RSVD(1) | RSVD(2) },
 	{ USB_DEVICE_INTERFACE_CLASS(TELIT_VENDOR_ID, 0x1231, 0xff),	/* Telit LE910Cx (RNDIS) */
 	  .driver_info = NCTRL(2) | RSVD(3) },
+	{ USB_DEVICE_AND_INTERFACE_INFO(TELIT_VENDOR_ID, 0x1250, 0xff, 0x00, 0x00) },	/* Telit LE910Cx (rmnet) */
 	{ USB_DEVICE(TELIT_VENDOR_ID, 0x1260),
 	  .driver_info = NCTRL(0) | RSVD(1) | RSVD(2) },
 	{ USB_DEVICE(TELIT_VENDOR_ID, 0x1261),
@@ -1977,10 +2032,18 @@ static const struct usb_device_id option_ids[] = {
 	  .driver_info = RSVD(3)},
 	{ USB_DEVICE_INTERFACE_CLASS(CINTERION_VENDOR_ID, CINTERION_PRODUCT_MV31_RMNET, 0xff),
 	  .driver_info = RSVD(0)},
+	{ USB_DEVICE_INTERFACE_CLASS(CINTERION_VENDOR_ID, CINTERION_PRODUCT_MV31_2_MBIM, 0xff),
+	  .driver_info = RSVD(3)},
+	{ USB_DEVICE_INTERFACE_CLASS(CINTERION_VENDOR_ID, CINTERION_PRODUCT_MV31_2_RMNET, 0xff),
+	  .driver_info = RSVD(0)},
 	{ USB_DEVICE_INTERFACE_CLASS(CINTERION_VENDOR_ID, CINTERION_PRODUCT_MV32_WA, 0xff),
 	  .driver_info = RSVD(3)},
+	{ USB_DEVICE_INTERFACE_CLASS(CINTERION_VENDOR_ID, CINTERION_PRODUCT_MV32_WA_RMNET, 0xff),
+	  .driver_info = RSVD(0) },
 	{ USB_DEVICE_INTERFACE_CLASS(CINTERION_VENDOR_ID, CINTERION_PRODUCT_MV32_WB, 0xff),
 	  .driver_info = RSVD(3)},
+	{ USB_DEVICE_INTERFACE_CLASS(CINTERION_VENDOR_ID, CINTERION_PRODUCT_MV32_WB_RMNET, 0xff),
+	  .driver_info = RSVD(0) },
 	{ USB_DEVICE(OLIVETTI_VENDOR_ID, OLIVETTI_PRODUCT_OLICARD100),
 	  .driver_info = RSVD(4) },
 	{ USB_DEVICE(OLIVETTI_VENDOR_ID, OLIVETTI_PRODUCT_OLICARD120),
@@ -2141,6 +2204,7 @@ static const struct usb_device_id option_ids[] = {
 	{ USB_DEVICE_INTERFACE_CLASS(0x305a, 0x1404, 0xff) },			/* GosunCn GM500 RNDIS */
 	{ USB_DEVICE_INTERFACE_CLASS(0x305a, 0x1405, 0xff) },			/* GosunCn GM500 MBIM */
 	{ USB_DEVICE_INTERFACE_CLASS(0x305a, 0x1406, 0xff) },			/* GosunCn GM500 ECM/NCM */
+	{ USB_DEVICE_AND_INTERFACE_INFO(OPPO_VENDOR_ID, OPPO_PRODUCT_R11, 0xff, 0xff, 0x30) },
 	{ } /* Terminating entry */
 };
 MODULE_DEVICE_TABLE(usb, option_ids);
@@ -2149,7 +2213,26 @@ MODULE_DEVICE_TABLE(usb, option_ids);
  * recognizes separately, thus num_port=1.
  */
 
+#if 1 //Added by Quectel
+static void cfmakeraw(struct ktermios *t)
+{
+	t->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+	t->c_oflag &= ~OPOST;
+	t->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+	t->c_cflag &= ~(CSIZE|PARENB);
+	t->c_cflag |= CS8;
+	t->c_cc[VMIN] = 1;
+	t->c_cc[VTIME] = 0;
+}
+
+static void option_init_termios(struct tty_struct *tty)
+{
+	cfmakeraw(&tty->termios);
+}
+#endif
+
 static struct usb_serial_driver option_1port_device = {
+	.init_termios  = option_init_termios,
 	.driver = {
 		.owner =	THIS_MODULE,
 		.name =		"option1",
@@ -2166,8 +2249,6 @@ static struct usb_serial_driver option_1port_device = {
 	.chars_in_buffer   = usb_wwan_chars_in_buffer,
 	.tiocmget          = usb_wwan_tiocmget,
 	.tiocmset          = usb_wwan_tiocmset,
-	.get_serial        = usb_wwan_get_serial_info,
-	.set_serial        = usb_wwan_set_serial_info,
 	.attach            = option_attach,
 	.release           = option_release,
 	.port_probe        = usb_wwan_port_probe,
@@ -2176,6 +2257,9 @@ static struct usb_serial_driver option_1port_device = {
 #ifdef CONFIG_PM
 	.suspend           = usb_wwan_suspend,
 	.resume            = usb_wwan_resume,
+#if 1 //Added by Quectel
+	.reset_resume = usb_wwan_resume,
+#endif
 #endif
 };
 
@@ -2199,6 +2283,44 @@ static int option_probe(struct usb_serial *serial,
 	struct usb_interface_descriptor *iface_desc =
 				&serial->interface->cur_altsetting->desc;
 	unsigned long device_flags = id->driver_info;
+
+#if 1 //Added by Quectel
+	//Quectel UC20's interface 4 can be used as USB Network device
+	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9003)
+		&& serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4)
+		return -ENODEV;
+
+	//Quectel EC20(MDM9215)'s interface 4 can be used as USB Network device
+	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9215)
+		&& serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4)
+		return -ENODEV;
+        
+    //Quectel QCM6125 & QCM6490's interface 2 can be used as USB Network device
+	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x05C6) && 
+		(serial->dev->descriptor.idProduct == cpu_to_le16(0x9091) || serial->dev->descriptor.idProduct == cpu_to_le16(0x90DB))
+		&& serial->interface->cur_altsetting->desc.bInterfaceNumber >= 2)
+		return -ENODEV;
+
+	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x2C7C)) {
+		__u16 idProduct = le16_to_cpu(serial->dev->descriptor.idProduct);
+		struct usb_interface_descriptor *intf = &serial->interface->cur_altsetting->desc;
+
+		if (intf->bInterfaceClass != 0xFF || intf->bInterfaceSubClass == 0x42) {
+			//ECM, RNDIS, NCM, MBIM, ACM, UAC, ADB
+			return -ENODEV;
+		}
+
+		if ((idProduct&0xF000) == 0x0000) {
+			//MDM interface 4 is QMI
+            if (idProduct == 0x0316 && intf->bInterfaceNumber == 3)   //SDX35
+				return -ENODEV;
+            
+			if (intf->bInterfaceNumber == 4 && intf->bNumEndpoints == 3
+				&& intf->bInterfaceSubClass == 0xFF && intf->bInterfaceProtocol == 0xFF)
+				return -ENODEV;
+		}
+	}
+#endif
 
 	/* Never bind to the CD-Rom emulation interface	*/
 	if (iface_desc->bInterfaceClass == USB_CLASS_MASS_STORAGE)
@@ -2313,7 +2435,7 @@ static void option_instat_callback(struct urb *urb)
 		dev_dbg(dev, "%s: error %d\n", __func__, status);
 
 	/* Resubmit urb so we continue receiving IRQ data */
-	if (status != -ESHUTDOWN && status != -ENOENT) {
+	if (status != -ESHUTDOWN && status != -ENOENT && status != -EPROTO) {
 		usb_mark_last_busy(port->serial->dev);
 		err = usb_submit_urb(urb, GFP_ATOMIC);
 		if (err)
