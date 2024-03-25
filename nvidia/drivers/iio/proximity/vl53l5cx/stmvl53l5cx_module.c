@@ -707,19 +707,21 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 		// }
 		// printk("stmvl53l5cx: device_id : 0x%x. revision_id : 0x%x\n", device_id, revision_id);
 
-		st_tof_miscdev_0.minor = MISC_DYNAMIC_MINOR;
-		st_tof_miscdev_0.name = "stmvl53l5cx";
-		st_tof_miscdev_0.fops = &stmvl53l5cx_ranging_fops_0;
-		st_tof_miscdev_0.mode = 0444;
+		// st_tof_miscdev_0.minor = MISC_DYNAMIC_MINOR;
+		// st_tof_miscdev_0.name = "stmvl53l5cx";
+		// st_tof_miscdev_0.fops = &stmvl53l5cx_ranging_fops_0;
+		// st_tof_miscdev_0.mode = 0444;
 
-		ret = misc_register(&st_tof_miscdev_0);
-		if (ret) {
-			pr_info("stmvl53l5cx : Failed to create misc device, err = %d\n",
-				ret);
-			return -1;
-		}
-
-		misc_registered_0 = 1;
+		// ret = misc_register(&st_tof_miscdev_0);
+		// if (ret) {
+		// 	misc_registered_0 = 0;
+		// 	pr_err("stmvl53l5cx_0 : Failed to create misc device, err = %d\n",
+		// 		ret);
+		// 	// return -1;
+		// } else {
+		// 	misc_registered_0 = 1;
+		// 	pr_info("stmvl53l5cx_0 : misc device created\n");
+		// }
 
 		return ret;
 
@@ -845,6 +847,22 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 		} else {
 			printk("stmvl53l5cx: 0 device_id : 0x%x. revision_id : 0x%x\n",
 			       device_id, revision_id);
+
+			st_tof_miscdev_0.minor = MISC_DYNAMIC_MINOR;
+			st_tof_miscdev_0.name = "stmvl53l5cx";
+			st_tof_miscdev_0.fops = &stmvl53l5cx_ranging_fops_0;
+			st_tof_miscdev_0.mode = 0444;
+
+			ret = misc_register(&st_tof_miscdev_0);
+			if (ret) {
+				misc_registered_0 = 0;
+				pr_err("stmvl53l5cx_0 : Failed to create misc device, err = %d\n",
+				       ret);
+				// return -1;
+			} else {
+				misc_registered_0 = 1;
+				pr_info("stmvl53l5cx_0 : misc device created\n");
+			}
 		}
 
 		page = 0;
@@ -874,12 +892,15 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 
 			ret = misc_register(&st_tof_miscdev_1);
 			if (ret) {
-				pr_info("stmvl53l5cx : Failed to create misc device, err = %d\n",
+				misc_registered_1 = 0;
+				pr_err("stmvl53l5cx_1 : Failed to create misc device, err = %d\n",
 					ret);
-				return -1;
+				// return -1;
+			} else {
+				misc_registered_1 = 1;
+				pr_info("stmvl53l5cx_1 : misc device created\n");
 			}
 
-			misc_registered_1 = 1;
 			return ret;
 		}
 
