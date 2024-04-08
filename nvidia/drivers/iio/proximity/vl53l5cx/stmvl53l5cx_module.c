@@ -583,6 +583,7 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 	int ret;
 	const char *compatible;
 	uint8_t page = 0, revision_id = 0, device_id = 0;
+	// int dev1_lpn_id = 482;
 
 	ret = device_property_read_string(&client->dev, "compatible",
 					  &compatible);
@@ -670,9 +671,9 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 				pr_info("Failed to acquire rst GPIO(%d)\n",
 					vl53_gpios[0].rst_gpio);
 			} else {
-				// gpio_set_value(vl53_gpios[0].rst_gpio, 0);
-				gpio_direction_output(vl53_gpios[0].rst_gpio,
-						      0);
+				gpio_set_value(vl53_gpios[0].rst_gpio, 0);
+				// gpio_direction_output(vl53_gpios[0].rst_gpio,
+				// 		      0);
 			}
 		} else {
 			dev_err(&stmvl53l5cx_i2c_client_0->dev,
@@ -681,6 +682,7 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 
 		if (vl53_gpios[0].lpn_gpio >= 0) {
 			ret = get_gpio(vl53_gpios[0].lpn_gpio, "lpn_gpio", 1);
+			pr_err("vl53 device 0 lpn gpio_id: %d\n", vl53_gpios[0].lpn_gpio);
 			if (ret != 0) {
 				pr_info("Failed to acquire lpn GPIO(%d)\n",
 					vl53_gpios[0].lpn_gpio);
@@ -815,21 +817,54 @@ static int stmvl53l5cx_probe(struct i2c_client *client,
 
 		if (vl53_gpios[1].lpn_gpio >= 0) {
 			ret = get_gpio(vl53_gpios[1].lpn_gpio, "lpn_gpio", 1);
+			pr_err("vl53 device 1 lpn gpio_id: %d\n", vl53_gpios[1].lpn_gpio);
 			if (ret != 0) {
 				pr_info("Failed to acquire lpn GPIO(%d)\n",
 					vl53_gpios[1].lpn_gpio);
 			} else {
 				gpio_direction_output(vl53_gpios[1].lpn_gpio,
 						      0);
+				gpio_set_value(vl53_gpios[1].lpn_gpio, 0);
 			}
 		} else {
 			dev_err(&stmvl53l5cx_i2c_client_1->dev,
 				"can't get named gpio: lpn_gpio");
 		}
 
-		vl53l5cx_set_i2c_address(0x27 << 1);
-		udelay(1000);
+		// ret = gpio_request(dev1_lpn_id, "dev1_lpn_id");
+		// if(ret) {
+		// 	pr_err("vl53 failed to request dev0 lpn pin %d\n", ret);
+		// }
+
+		// gpio_direction_output(dev1_lpn_id, 0);
+		// gpio_set_value(dev1_lpn_id, 0);
+
+		ret = stmvl53l5cx_write_multi(stmvl53l5cx_i2c_client_0,
+					      raw_data_buffer_0, 0x7FFF, &page,
+					      1);
+		ret |= stmvl53l5cx_read_multi(stmvl53l5cx_i2c_client_0,
+					      raw_data_buffer_0, 0x00,
+					      &device_id, 1);
+		ret |= stmvl53l5cx_read_multi(stmvl53l5cx_i2c_client_0,
+					      raw_data_buffer_0, 0x01,
+					      &revision_id, 1);
+
+		if ((device_id != 0xF0) || (revision_id != 0x02)) {
+			vl53l5cx_set_i2c_address(0x27 << 1);
+			udelay(1000);
+			// gpio_direction_output(vl53_gpios[1].lpn_gpio, 1);
+			// pr_err("stmvl53l5cx: Error. Could'nt read 0 device and revision id registers\n");
+			// return ret;
+		} else {
+			// printk("stmvl53l5cx: 0 device_id : 0x%x. revision_id : 0x%x\n",
+			//        device_id, revision_id);
+		}
+
 		gpio_direction_output(vl53_gpios[1].lpn_gpio, 1);
+
+		page = 0;
+		revision_id = 0;
+		device_id = 0;
 
 		ret = stmvl53l5cx_write_multi(stmvl53l5cx_i2c_client_0,
 					      raw_data_buffer_0, 0x7FFF, &page,
@@ -973,6 +1008,7 @@ static void __exit st_tof_module_exit(void)
 	}
 
 	if (gpio_own_flags[0].intr_gpio_owned == 1) {
+		gpio_set_value(vl53_gpios[0].lpn_gpio, 0);
 		put_gpio(vl53_gpios[0].intr_gpio_nb);
 		put_gpio(vl53_gpios[0].rst_gpio);
 		put_gpio(vl53_gpios[0].power_gpio);
@@ -980,6 +1016,7 @@ static void __exit st_tof_module_exit(void)
 	}
 
 	if (gpio_own_flags[1].intr_gpio_owned == 1) {
+		gpio_set_value(vl53_gpios[1].lpn_gpio, 0);
 		put_gpio(vl53_gpios[1].intr_gpio_nb);
 		put_gpio(vl53_gpios[1].rst_gpio);
 		put_gpio(vl53_gpios[1].power_gpio);
